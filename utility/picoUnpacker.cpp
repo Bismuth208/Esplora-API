@@ -92,6 +92,7 @@ uint8_t findPackedMark(uint8_t *ptr, uint16_t sizeData)
   return 0;
 }
 
+// reserved for future
 uint8_t findPackedMark(uint8_t *ptr)
 {
   do {
@@ -125,16 +126,19 @@ void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
     do {
 #ifdef __AVR__  // really dirt trick... but... FOR THE PERFOMANCE!
       SPDR_t in = {.val = repeatColor};
-      SPDR = in.msb;
-      SPDR_TX_WAIT;
-
+      SPDR_TX_WAIT;  // wait for: (2 cycles per bit * (F_CPU/2)) or 16 cycles
+      SPDR = in.msb; // 18 cycles for each byte
+      
+      SPDR_TX_WAIT;  // so much to waste... 32 cycles... for each pixel...    
       SPDR = in.lsb;
-      SPDR_TX_WAIT;
 #else
       pushColorFast(repeatColor);
 #endif
     } while(--repeatTimes);
   }
+#ifdef __AVR__ 
+  SPDR_TX_WAIT;  // dummy wait to stable SPI
+#endif
 }
 
 uint8_t *unpackBuf_DIC(const uint8_t *pDict, uint16_t dataSize)
@@ -240,14 +244,17 @@ void drawPico_RLE_P(uint8_t x, uint8_t y, pic_t *pPic)
     do {
 #ifdef __AVR__  // really dirt trick... but... FOR THE PERFOMANCE!
       SPDR_t in = {.val = repeatColor};
+      SPDR_TX_WAIT;
       SPDR = in.msb;
+      
       SPDR_TX_WAIT;
-
       SPDR = in.lsb;
-      SPDR_TX_WAIT;
 #else
       pushColorFast(repeatColor);
 #endif
     } while(--repeatTimes);
   }
+#ifdef __AVR__ 
+  SPDR_TX_WAIT;  // dummy wait to stable SPI
+#endif
 }

@@ -37,10 +37,7 @@ extern "C"{
 //---------------------------------------------------------------------------//
 
 // adrr range used: 0x00 - 0x??
-#define EE_ADDR_SAVE_DATA  0x00
-
-#define getSaveData(addr, val, type)  eeprom_read_block((void*)val, (void*)addr, sizeof(type))
-#define setSaveData(addr, val, type)  eeprom_update_block((void*)val, (void*)addr, sizeof(type))
+#define EE_MAX_ADDR 1024
 
 //---------------------------------------------------------------------------//
 
@@ -110,6 +107,7 @@ typedef union { // 2 bytes
 //---------------------------------------------------------------------------//
 
 extern uint16_t palette_RAM[];
+extern bezier_t      bezierLine;
 
 //---------------------------------------------------------------------------//
 void initPalette(void);
@@ -130,6 +128,9 @@ void updateSprite(sprite_t *pSprite);
 void drawSprite(sprite_t *pSprite);
 void moveSprite(sprite_t *pSprite);
 void removeSprite(sprite_t *pSprite);
+
+void getSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize);
+void setSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize);
 
 //---------------------------------------------------------------------------//
 

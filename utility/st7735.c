@@ -74,36 +74,8 @@ void writeWordData(uint16_t c)
 
 // Companion code to the above tables.  Reads and issues
 // a series of LCD commands stored in PROGMEM byte array.
-void commandList(const uint8_t *addr) {
-
-  uint8_t  numCommands, numArgs;
-  uint16_t ms;
-
-  numCommands = pgm_read_byte(addr++);   // Number of commands to follow
-  while(numCommands--) {                 // For each command...
-    ENABLE_CMD();
-    sendData8_SPI1(pgm_read_byte(addr++)); // Read, issue command
-    numArgs  = pgm_read_byte(addr++);    // Number of args to follow
-    ms       = numArgs & DELAY;          // If hibit set, delay follows args
-    numArgs &= ~DELAY;                   // Mask out delay bit
-    ENABLE_DATA();
-    while(numArgs--) {                   // For each argument...
-      sendData8_SPI1(pgm_read_byte(addr++));  // Read, issue argument
-    }
-
-    if(ms) {
-      ms = pgm_read_byte(addr++); // Read post-command delay time (ms)
-      if(ms == 255) ms = 500;     // If 255, delay for 500 ms
-      _delayMS(ms);
-    }
-  }
-}
-
-#if 0
-// Companion code to the above tables.  Reads and issues
-// a series of LCD commands stored in PROGMEM byte array.
-void commandList(const uint8_t *addr) {
-  
+void commandList(const uint8_t *addr)
+{  
   uint8_t  numCommands, numArgs;
   uint16_t ms;
   
@@ -124,7 +96,6 @@ void commandList(const uint8_t *addr) {
     }
   }
 }
-#endif
 
 void initTFT_GPIO(void)
 {
@@ -153,7 +124,7 @@ void commonInit(const uint8_t *cmdList)
   SET_TFT_RES_LOW; _delayMS(10);
   SET_TFT_RES_HI;  _delayMS(10);
 
-  if(cmdList) commandList(cmdList);
+  commandList(cmdList);
 }
 
 // Initialization for ST7735B screens

@@ -86,7 +86,7 @@ void drawFrame(uint8_t posX, uint8_t posY, uint8_t w, uint8_t h, uint16_t clr1, 
 // hardware scrolling; blocks everything
 void screenSliderEffect(uint8_t colorId)
 {
-  uint16_t color = getPlatetteColor(colorId);
+  uint16_t color = palette_RAM[colorId];
 
   for(int16_t i = TFT_W; i >= 0; i--) {
     tftScrollSmooth(1, i-1, 2); // 2 - is delay in ms
@@ -104,15 +104,20 @@ void removePicFast(position_t *pPos, pic_t *pPic)
 
   do {
 #ifdef __AVR__  // really dirt trick... but... FOR THE PERFOMANCE!
-    SPDR_t in = {.val = getPlatetteColor(alphaReplaceColorId)};
+    SPDR_t in = {.val = palette_RAM[alphaReplaceColorId]};
+    SPDR_TX_WAIT;
     SPDR = in.msb;
+    
     SPDR_TX_WAIT;
     SPDR = in.lsb;
-    SPDR_TX_WAIT;
 #else
-    pushColorFast(getPlatetteColor(alphaReplaceColorId));
+    pushColorFast(palette_RAM[alphaReplaceColorId]);
 #endif
   } while(--dataSize);
+
+#ifdef __AVR__ 
+  SPDR_TX_WAIT;  // dummy wait to stable SPI
+#endif
 }
 
 void drawPixelFast(position_t *pPos, uint8_t colorId)
@@ -123,10 +128,10 @@ void drawPixelFast(position_t *pPos, uint8_t colorId)
 
 void printDutyDebug(uint32_t duration)
 {
-  char buf[10];
+  char buf[8];
 
   tftSetTextSize(1);
-  tftFillRect(0, 0, 36, 7, getPlatetteColor(alphaReplaceColorId));
+  tftFillRect(0, 0, 36, 7, palette_RAM[alphaReplaceColorId]);
   tftPrintAt(0, 0, itoa(duration, buf, 10));
 }
 
@@ -192,6 +197,25 @@ void drawSprite(sprite_t *pSprite)
 void removeSprite(sprite_t *pSprite)
 {
   removePicFast(&pSprite->pos.Old, pSprite->pPic);
+}
+
+//---------------------------------------------------------------------------//
+void getSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
+{
+  uint16_t blockEEAddr = blockNum * blockSize;
+
+  if(blockEEAddr < (EE_MAX_ADDR - blockSize)) {
+    eeprom_read_block(blockPtr, (void*)blockEEAddr, blockSize);
+  }
+}
+
+void setSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
+{
+  uint16_t blockEEAddr = blockNum * blockSize;
+
+  if(blockEEAddr < (EE_MAX_ADDR - blockSize)) {
+    eeprom_update_block(blockPtr, (void*)blockEEAddr, blockSize);
+  }
 }
 
 //---------------------------------------------------------------------------//
