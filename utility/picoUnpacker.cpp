@@ -66,12 +66,12 @@
 #define ALPHA_COLOR_ID   0x0F
 
 // unsafe but it works on avr, and stm32
-#define setPicWData(a, b)   (*(uint16_t*)(&a[b]))
+#define setPicWData(a)   (*(uint16_t*)(a))
 #ifdef __AVR__
  #define getPicWData(a, b)   pgm_read_word(&(a[(b - DICT_MARK)<<1]))
 #else
  #define getPicByte(a)      (*(const uint8_t *)(a))
- #define getPicWData(a, b)  (*(const uint16_t*)(&(a[b])))
+ #define getPicWData(a, b)  (*(const uint16_t*)(&(a[(b - DICT_MARK)<<1]))
 #endif /* __AVR__ */
 
 //---------------------------------------------------------------------------//
@@ -79,41 +79,31 @@
 
 uint8_t buf_packed[MAX_UNFOLD_SIZE<<1];   // \__ unpacked data needs
 uint8_t buf_unpacked[MAX_UNFOLD_SIZE<<1]; // /   minimum 2x more RAM
+
+static uint8_t alphaReplaceColorId = 0;
 //---------------------------------------------------------------------------//
 
-uint8_t findPackedMark(uint8_t *ptr, uint16_t sizeData)
+inline uint8_t findPackedMark(uint8_t *ptr)
 {
+  uint8_t status = 0;
   do {
-    if(*ptr++ >= DICT_MARK) {
-      return 1;
-    }
-  } while(--sizeData);
-  
-  return 0;
-}
-
-// reserved for future
-uint8_t findPackedMark(uint8_t *ptr)
-{
-  do {
-    if((*ptr++) == PIC_DATA_END) break;
-
     if(*ptr >= DICT_MARK) {
-      return 1;
+       status = 1;
+       break;
     }
-  } while(1);
+    ++ptr;
+  } while(*ptr != PIC_DATA_END);
   
-  return 0;
+  return status;
 }
 
-void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
+inline void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
 {
   uint16_t repeatColor;
   uint8_t repeatTimes, tmpByte;
-  uint8_t alphaReplaceColorId = getAlphaReplaceColorId();
   
   while((tmpByte = *pData) != PIC_DATA_END) { // get color index or repeat times
-    if(tmpByte & RLE_MARK) { // is it color index?
+    if(tmpByte & RLE_MARK) { // is it RLE byte?
       tmpByte &= DATA_MARK; // get color index to repeat
       repeatTimes = *(++pData)+1; // zero RLE does not exist!
     }
@@ -124,60 +114,55 @@ void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
     repeatColor = palette_RAM[(tmpByte == ALPHA_COLOR_ID) ? alphaReplaceColorId : tmpByte];
     
     do {
-#ifdef __AVR__  // really dirt trick... but... FOR THE PERFOMANCE!
+#ifdef ESPLORA_OPTIMIZE  // really dirt trick... but... FOR THE PERFOMANCE!
       SPDR_t in = {.val = repeatColor};
-      SPDR_TX_WAIT;  // wait for: (2 cycles per bit * (F_CPU/2)) or 16 cycles
+      SPDR_TX_WAIT("");  // wait for: (2 cycles per bit * (F_CPU/2)) or 16 cycles
       SPDR = in.msb; // 18 cycles for each byte
       
-      SPDR_TX_WAIT;  // so much to waste... 32 cycles... for each pixel...    
+      SPDR_TX_WAIT("nop");  // so much to waste... 32 cycles... for each pixel...    
       SPDR = in.lsb;
 #else
       pushColorFast(repeatColor);
 #endif
     } while(--repeatTimes);
   }
-#ifdef __AVR__ 
-  SPDR_TX_WAIT;  // dummy wait to stable SPI
+#ifdef ESPLORA_OPTIMIZE 
+  SPDR_TX_WAIT("");  // dummy wait to stable SPI
 #endif
 }
 
-uint8_t *unpackBuf_DIC(const uint8_t *pDict, uint16_t dataSize)
+inline uint8_t *unpackBuf_DIC(const uint8_t *pDict)
 {
-  uint16_t bufPackedPos, bufUnpackedPos;
-  uint8_t dictMarker = findPackedMark(&buf_packed[0], dataSize);
-  uint8_t *pUnpackedData = nullptr;
-  
-  if(dictMarker) {
-    bufPackedPos =0;
-    bufUnpackedPos =0;
-    pUnpackedData = &buf_unpacked[0];
-    
-    while(dictMarker) {
-      if(buf_packed[bufPackedPos] >= DICT_MARK) {
-        setPicWData(buf_unpacked, bufUnpackedPos) = getPicWData(pDict, buf_packed[bufPackedPos]);
-        ++bufUnpackedPos;
-      } else {
-        buf_unpacked[bufUnpackedPos] = buf_packed[bufPackedPos];
-      }
-      ++bufUnpackedPos;
-      ++bufPackedPos;
-      
-      if(bufPackedPos >= dataSize) {
-        dictMarker = findPackedMark(&buf_unpacked[0], bufUnpackedPos);
-        dataSize = bufUnpackedPos;
-        if(dictMarker) {
-          memcpy_F(&buf_packed[0], &buf_unpacked[0], bufUnpackedPos); // maybe swap pointers?
-          bufUnpackedPos =0;
-          bufPackedPos =0;
-        }
-      }
+  bool swap = false;
+  bool dictMarker = true;
+  auto getBufferPtr = [&](uint8_t a[], uint8_t b[]) {
+    return swap ? &a[0] : &b[0];
+  };
+
+  auto ptrP = getBufferPtr(buf_unpacked, buf_packed);
+  auto ptrU = getBufferPtr(buf_packed, buf_unpacked);
+
+  while(dictMarker) {
+    if(*ptrP >= DICT_MARK) {
+      setPicWData(ptrU) = getPicWData(pDict, *ptrP);
+      ++ptrU;
+    } else {
+      *ptrU = *ptrP;
     }
-  } else {
-    pUnpackedData = &buf_packed[0];
+    ++ptrU;
+    ++ptrP;
+
+    if(*ptrP == PIC_DATA_END) {
+      *ptrU = *ptrP; // mark end of chunk
+      swap = !swap;
+      ptrP = getBufferPtr(buf_unpacked, buf_packed);
+      ptrU = getBufferPtr(buf_packed, buf_unpacked);
+
+      dictMarker = findPackedMark(ptrP);
+    }
   }
 
-  pUnpackedData[dataSize] = PIC_DATA_END; // unpacked chunk end
-  return pUnpackedData;
+  return getBufferPtr(buf_unpacked, buf_packed);
 }
 
 // extended RLE, based on dictionary, a bit slower but better compression
@@ -186,36 +171,36 @@ void drawPico_DIC_P(uint8_t x, uint8_t y, pic_t *pPic)
   auto tmpData = getPicSize(pPic, 0);
   tftSetAddrWindow(x, y, x+tmpData.u8Data1, y+tmpData.u8Data2);
   
-  uint8_t tmpByte;
-  uint16_t unfoldPos;
+  uint8_t tmpByte, unfoldPos, dictMarker;
+  alphaReplaceColorId = getAlphaReplaceColorId();
+
   auto pDict = &pPic[3];         // save dictionary pointer
   pPic += getPicByte(&pPic[2]);  // make offset to picture data
   
-  for(;;) { // endless cycle here is bad architecture... but it's works!
-    unfoldPos =0;
+  do {
+    unfoldPos = dictMarker = 0;
     
     do {
-      if((tmpByte = getPicByte(++pPic)) < PIC_DATA_END) {
+      if((tmpByte = getPicByte(++pPic)) != PIC_DATA_END) {
         if(tmpByte < DICT_MARK) {
           buf_packed[unfoldPos] = tmpByte;
         } else {
-          setPicWData(buf_packed, unfoldPos) = getPicWData(pDict, tmpByte);
+          dictMarker = 1;
+          setPicWData(&buf_packed[unfoldPos]) = getPicWData(pDict, tmpByte);
           ++unfoldPos;
         }
         ++unfoldPos;
       } else {
         break;
       }
-    } while((unfoldPos < MAX_UNFOLD_SIZE-1)
+    } while((unfoldPos < MAX_UNFOLD_SIZE) //&& (unfoldPos)
             && ((tmpByte > DATA_MARK) || (tmpByte > MAX_DATA_LENGTH)));
     
     if(unfoldPos) {
-      //buf_packed[unfoldPos + 1] = PIC_DATA_END; // chunk end
-      printBuf_RLE(unpackBuf_DIC(pDict, unfoldPos)); // V2V3 decoder
-    } else {
-      return;
+      buf_packed[unfoldPos] = PIC_DATA_END; // mark end of chunk
+      printBuf_RLE( dictMarker ? unpackBuf_DIC(pDict) : &buf_packed[0] ); // V2V3 decoder
     }
-  }
+  } while(unfoldPos);
 }
 
 // =============================================================== //
@@ -224,7 +209,7 @@ void drawPico_RLE_P(uint8_t x, uint8_t y, pic_t *pPic)
 {
   uint16_t repeatColor;
   uint8_t tmpInd, repeatTimes;
-  uint8_t alphaReplaceColorId = getAlphaReplaceColorId();
+  alphaReplaceColorId = getAlphaReplaceColorId();
 
   auto tmpData = getPicSize(pPic, 0);
   tftSetAddrWindow(x, y, x+tmpData.u8Data1, y+tmpData.u8Data2);
@@ -242,19 +227,19 @@ void drawPico_RLE_P(uint8_t x, uint8_t y, pic_t *pPic)
     repeatColor = palette_RAM[(tmpInd == ALPHA_COLOR_ID) ? alphaReplaceColorId : tmpInd];
     
     do {
-#ifdef __AVR__  // really dirt trick... but... FOR THE PERFOMANCE!
+#ifdef ESPLORA_OPTIMIZE  // really dirt trick... but... FOR THE PERFOMANCE!
       SPDR_t in = {.val = repeatColor};
-      SPDR_TX_WAIT;
+      SPDR_TX_WAIT("");
       SPDR = in.msb;
       
-      SPDR_TX_WAIT;
+      SPDR_TX_WAIT("nop");
       SPDR = in.lsb;
 #else
       pushColorFast(repeatColor);
 #endif
     } while(--repeatTimes);
   }
-#ifdef __AVR__ 
-  SPDR_TX_WAIT;  // dummy wait to stable SPI
+#ifdef ESPLORA_OPTIMIZE 
+  SPDR_TX_WAIT("");  // dummy wait to stable SPI
 #endif
 }

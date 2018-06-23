@@ -47,7 +47,7 @@ void initSPI(void)
 void sendData8_SPI1(uint8_t data)
 {
   SPDR = data;
-  SPDR_TX_WAIT;
+  SPDR_TX_WAIT("nop");
 }
 
 void sendData16_SPI1(uint16_t data)
@@ -56,10 +56,24 @@ void sendData16_SPI1(uint16_t data)
   SPDR_t in = {.val = data};
   
   SPDR = in.msb;
-  SPDR_TX_WAIT;
+  SPDR_TX_WAIT("nop");
   
   SPDR = in.lsb;
-  SPDR_TX_WAIT;
+  SPDR_TX_WAIT("nop");
+}
+
+void floodData16_SPI1(uint16_t data, uint16_t len)
+{
+  SPDR_t in = {.val = data};
+  do {
+    SPDR_TX_WAIT("");
+    SPDR = in.msb;
+    
+    SPDR_TX_WAIT("nop");
+    SPDR = in.lsb;
+  } while(--len);
+
+  SPDR_TX_WAIT("");  // dummy wait to stable SPI
 }
 
 // bData - 8bit data to be loaded in SPDR
@@ -91,7 +105,7 @@ void sendArrSPI(uint8_t *buf, uint16_t size)
   
   for(count = 0; count < size; count++) {
     SPDR = buf[count];
-    SPDR_TX_WAIT
+    SPDR_TX_WAIT("nop");
   }
 }
 // --------------------------------------------------------- //

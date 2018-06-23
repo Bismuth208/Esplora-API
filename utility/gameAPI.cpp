@@ -63,7 +63,7 @@ const uint16_t palette_ext[] PROGMEM = {
 uint16_t palette_RAM[PALETTE_SIZE>>1];
 //---------------------------------------------------------------------------//
 
-uint8_t alphaReplaceColorId = 0;
+static uint8_t alphaReplaceColorId = 0;
 
 //---------------------------------------------------------------------------//
 void drawText(uint8_t posX, uint8_t posY, uint8_t textSize, text_t *pText)
@@ -103,20 +103,20 @@ void removePicFast(position_t *pPos, pic_t *pPic)
   uint16_t dataSize = (tmpData.u8Data1+1) * (tmpData.u8Data2+1);
 
   do {
-#ifdef __AVR__  // really dirt trick... but... FOR THE PERFOMANCE!
+#ifdef ESPLORA_OPTIMIZE  // really dirt trick... but... FOR THE PERFOMANCE!
     SPDR_t in = {.val = palette_RAM[alphaReplaceColorId]};
-    SPDR_TX_WAIT;
+    SPDR_TX_WAIT("");
     SPDR = in.msb;
     
-    SPDR_TX_WAIT;
+    SPDR_TX_WAIT("nop");
     SPDR = in.lsb;
 #else
     pushColorFast(palette_RAM[alphaReplaceColorId]);
 #endif
   } while(--dataSize);
 
-#ifdef __AVR__ 
-  SPDR_TX_WAIT;  // dummy wait to stable SPI
+#ifdef ESPLORA_OPTIMIZE 
+  SPDR_TX_WAIT("");  // dummy wait to stable SPI
 #endif
 }
 
@@ -159,7 +159,7 @@ bool checkSpriteCollision(sprite_t *pSprOne, sprite_t *pSprTwo)
   /* ----------- Check Y position ----------- */
   uint8_t objOnePosEndY = (pSprOne->pos.Old.y + tmpDataOne.u8Data2);
   
-  if(objOnePosEndY>= pSprTwo->pos.Old.y) {
+  if(objOnePosEndY >= pSprTwo->pos.Old.y) {
     uint8_t objTwoPosEndY = (pSprTwo->pos.Old.y + tmpDataTwo.u8Data2);
     if(pSprOne->pos.Old.y <= objTwoPosEndY) {
       // ok, objects on same Y lines; Go next...

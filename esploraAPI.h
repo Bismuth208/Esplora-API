@@ -22,13 +22,14 @@
 #include "utility/adc.h"
 #include "utility/spi.h"
 #include "utility/systicktimer.h"
-#include "utility/taskmanager.h"
+#include "utility/tinySM.h"
 #include "utility/gfx.h"
 #include "utility/st7735.h"
 #include "utility/help.h"
 #include "utility/sfx.h"
-#include <utility/gameAPI.h>
-#include <utility/picoUnpacker.h>
+#include "utility/gameAPI.h"
+#include "utility/picoUnpacker.h"
+#include "utility/fixedptc/fixedptc.h"
 
 // ------------------------------------ //
 #define ACCEL_AXIS_X  ADC_CH0

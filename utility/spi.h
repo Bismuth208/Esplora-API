@@ -9,7 +9,7 @@
  * about 10% more speed, even if it seems counter-intuitive. At lower
  * speeds it is unnoticed.
  */
-#define SPDR_TX_WAIT  asm volatile("nop"); while((SPSR & (1<<SPIF)) == 0);
+#define SPDR_TX_WAIT(a)  asm volatile(a); while((SPSR & (1<<SPIF)) == 0);
 
 typedef union {
   uint16_t val;
@@ -28,6 +28,7 @@ void initSPI(void);
 void sendData8_SPI1(uint8_t data);
 void sendData16_SPI1(uint16_t data);
 void sendArrSPI(uint8_t *buf, uint16_t size);
+void floodData16_SPI1(uint16_t data, uint16_t len);
 
 void sendData8Dirt_SPI1(uint8_t bData, uint8_t len);
   

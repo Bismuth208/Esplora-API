@@ -40,7 +40,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "systicktimer.h"
 #include "spi.h"
 #include "gfx.h"
-#include "glcdfont.h"
+#include "fonts/glcdfont.h"
+// #include "fonts/arcadeFont.h"
 
 //-------------------------------------------------------------------------------------------//
 
@@ -54,8 +55,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef abs
 #undef abs
-//#define abs(x) ((x)>0?(x):-(x))
-#define abs(x) ((x ^ (x >> 15)) - (x >> 15))  // for 16 bit
+#define abs(x) ((x)>0?(x):-(x))
+//#define abs(x) ((x ^ (x >> 15)) - (x >> 15))  // for 16 bit
 #endif
 
 #ifndef swap
@@ -76,6 +77,7 @@ static int16_t cursor_y = 0;
 static bool wrap = true;   // If set, 'wrap' text at right edge of display
 static bool _cp437 = false; // If set, use correct CP437 charset (default is off)
 
+static uint8_t *pFont = font; //arcade8bit8x8; 
 //-------------------------------------------------------------------------------------------//
 
 void tftDrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
@@ -557,7 +559,8 @@ void tftPrintChar(uint8_t c)
     } break;
       
     case '\b': { // 'BACKSPACE'
-      cursor_x  = 0;
+      // cursor_x -= (textsize*6);
+      cursor_x =0;
     } break;
       
 //    case '\e': { // 'ESCAPE'
@@ -593,7 +596,7 @@ void tftDrawCharInt(int16_t x, int16_t y, uint8_t c)
   if(textsize == 1) {
     for (i=0; i<6; i++ ) {
       
-      line = (i == 5) ? 0x00 : pgm_read_byte(font+(c*5)+i);
+      line = (i == 5) ? 0x00 : pgm_read_byte(pFont+(c*5)+i);
       
       for (j = 0; j<8; j++) {
         if (line & 0x1) tftDrawPixel(x+i, y+j, textcolor);
@@ -606,7 +609,7 @@ void tftDrawCharInt(int16_t x, int16_t y, uint8_t c)
   } else {
     for (i=0; i<6; i++ ) {
 
-      line = (i == 5) ? 0x00 : pgm_read_byte(font+(c*5)+i);
+      line = (i == 5) ? 0x00 : pgm_read_byte(pFont+(c*5)+i);
       
       for (j = 0; j<8; j++) {
         if (line & 0x1) {
@@ -640,7 +643,7 @@ void tftDrawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, u
   if(size == 1) {
     for (i=0; i<6; i++ ) {
       
-      line = (i == 5) ? 0x00 : pgm_read_byte(font+(c*5)+i);
+      line = (i == 5) ? 0x00 : pgm_read_byte(pFont+(c*5)+i);
       
       for (j = 0; j<8; j++) {
         if (line & 0x1) tftDrawPixel(x+i, y+j, color);
@@ -653,7 +656,7 @@ void tftDrawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, u
   } else {
     for (i=0; i<6; i++ ) {
       
-      line = (i == 5) ? 0x00 : pgm_read_byte(font+(c*5)+i);
+      line = (i == 5) ? 0x00 : pgm_read_byte(pFont+(c*5)+i);
       
       for (j = 0; j<8; j++) {
         if (line & 0x1) {

@@ -9,16 +9,17 @@
  * if call timeout is low(rare).
  * 
  * System uptime time couter requred.
- * You can change it in TIMER_FUNC define,
+ * You can change it in TSM_SYS_TICK_TIME define,
  * but it must return milliseconds!
  * 
  * Minimal time unit: 1 millis
  * Maximum tasks:     254 (0xFF reserved as NULL)
- * RAM per task:      9 bytes (for AVR only!)
+ * RAM per task:      9 bytes (on AVR only!)
  * Language:          C
  * 
  * Author: Antonov Alexandr (Bismuth208)
- * Date:      7 Dec, 2015
+ * Created:     7  Dec, 2015
+ * Last edit:  23 June, 2018
  * e-mail: bismuth20883@gmail.com
  * 
  * 1 tab = 2 spaces
@@ -35,37 +36,46 @@
  #define pgm_read_word(a) (*(const uint16_t*)(a))
 #endif
 
-#include "systicktimer.h"
-#include "taskmanager.h"
+#include "tinySM.h"
 
 //---------------------------------------------------------------------------//
 
-#if !USE_DYNAMIC_MEM
-// Used only in static mem managment
-static uint8_t maxTasks = 0;
+// PAA - pointer acess array
+#define PAA pCurrentArrTasks->pArr
+// PAC - pointer acess count
+#define PAC pCurrentArrTasks->tasksCount
+
+//---------------------------------------------------------------------------//
+
+#if !TSM_CONFIG_USE_DYNAMIC_MEM
+static uint8_t maxTasks = 0; // Used only in static mem managment
 #endif
 
 static bool resetTaskCount = false;
 
 static tasksContainer_t *pCurrentArrTasks = NULL;  // pointer to current tasks array
 
-#ifdef USE_MEM_PANIC
+#if TSM_CONFIG_USE_MEM_PANIC
 const uint8_t textPanic[] /*PROGMEM*/ = "Sorry...\nMemory panic :(\n\n";
 const uint8_t textError[] /*PROGMEM*/ = "Error code: ";
 #endif
 
-#if USE_AUTO_DEFRAG
-uint32_t defragNextMs=0;
+#if TSM_CONFIG_USE_AUTO_DEFRAG
+uint32_t defragNextMs = 0;
 #endif
-#if USE_AUTO_GEMINI
-uint32_t geminiNextMs=0;
+#if TSM_CONFIG_USE_AUTO_GEMINI
+uint32_t geminiNextMs = 0;
 #endif
 
-#ifdef USE_GFX_LIB
+#if TSM_CONFIG_USE_GFX_LIB
 fPrint_t fpPrint = NULL;
 fFillRect_t fpFillRect = NULL;
 fSetCursor_t fpSetCursor = NULL;
 fDrawFastVLine_t fpDrawFastVLine = NULL;
+#endif
+
+#if TSM_CONFIG_USE_IDLE_FUNC
+pFunc_t pFuncIDLE = NULL;
 #endif
 
 //------------------- Main loop reincarnation -------------------------------//
@@ -76,52 +86,65 @@ fDrawFastVLine_t fpDrawFastVLine = NULL;
  */
 __attribute__ ((noreturn)) void runTasks(void)
 {
-  uint8_t currentTaskNum =0;
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(pTasksArr->pArr == NULL) panic(NULL_PTR_ACCESS);
+#endif
+  uint8_t currentTaskNum = 0;
   
   // store pointer from RAM, to reduce instructions
   taskFunc_t *pCurArr = &PAA[0];
 
   for(;;) {
-#if USE_AUTO_GEMINI
-    if(TIMER_FUNC >= geminiNextMs) {
+#if TSM_CONFIG_USE_AUTO_GEMINI
+    if(TSM_SYS_TICK_TIME >= geminiNextMs) {
       rmSameTasks();
-      geminiNextMs = TIMER_FUNC + AUTO_GEMINI_TIMEOUT;
+      geminiNextMs = TSM_SYS_TICK_TIME + TSM_CONFIG_AUTO_GEMINI_TIMEOUT;
     }
-#endif
-#if USE_AUTO_DEFRAG
-    if(TIMER_FUNC >= defragNextMs) {
-      defragTasksMemory();
-      defragNextMs = TIMER_FUNC + AUTO_DEFRAG_TIMEOUT;
-    }
-#endif
+#endif /* TSM_CONFIG_USE_AUTO_GEMINI */
 
-#if USE_NO_TASK_PANIC
+#if TSM_CONFIG_USE_AUTO_DEFRAG
+    if(TSM_SYS_TICK_TIME >= defragNextMs) {
+      defragTasksMemory();
+      defragNextMs = TSM_SYS_TICK_TIME + TSM_CONFIG_AUTO_DEFRAG_TIMEOUT;
+    }
+#endif /* TSM_CONFIG_USE_AUTO_DEFRAG */
+
+#if TSM_CONFIG_USE_IDLE_FUNC
+    if(pFuncIDLE) pFuncIDLE();
+#endif /* TSM_CONFIG_USE_IDLE_FUNC */
+
+#if TSM_CONFIG_USE_TASKS_PANIC
     if(PAC) {
-#endif
+#endif /* TSM_CONFIG_USE_TASKS_PANIC */
+
       // Have func?
       if(pCurArr->task.pFunc) { // problems in future see i here
+#if TSM_CONFIG_USE_EXECUTE_FLAG
         if(pCurArr->execute) { // need execute?
-          // check timeout
-          if(TIMER_FUNC >= pCurArr->nextCallTime) {
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
+          // TODO: fix timer overflow.
+          if(TSM_SYS_TICK_TIME >= pCurArr->nextCallTime) { // check timeout
             pCurArr->task.pFunc(); // execute
             
             if(resetTaskCount) {
               resetTaskCount = false;
             } else {
               // get time of next exec
-              pCurArr->nextCallTime = TIMER_FUNC + pCurArr->task.timeOut;
+              pCurArr->nextCallTime = TSM_SYS_TICK_TIME + pCurArr->task.timeOut;
             }
           }
+#if TSM_CONFIG_USE_EXECUTE_FLAG
         }
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
       }
       
       if(++currentTaskNum >= PAC) {
-        currentTaskNum =0;
+        currentTaskNum = 0;
         pCurArr = &PAA[0];
       } else {
         ++pCurArr;
       }
-#if USE_NO_TASK_PANIC
+#if TSM_CONFIG_USE_TASKS_PANIC
     } else {
       panic(CHECK_TASKS_FAIL | NO_TASKS_FAIL);
     }
@@ -142,8 +165,11 @@ void addTask(pFunc_t pTask, uint16_t timeToCheckTask, bool exec)
   // Add task by reallocate memory
   // for dynamic struct array with pointers to funtions.
   // After, place task and timeout to new index in array.
-    
-#if USE_MEM_PANIC
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
+
+#if TSM_CONFIG_USE_MEM_PANIC
   if(PAC < MAX_TASKS) { // less than 254 tasks
       PAC++;   // increase total tasks
   } else {
@@ -153,7 +179,7 @@ void addTask(pFunc_t pTask, uint16_t timeToCheckTask, bool exec)
   PAC++;   // increase total tasks
 #endif
 
-#if USE_DYNAMIC_MEM
+#if TSM_CONFIG_USE_DYNAMIC_MEM
   // reallocate block of RAM for new task
   PAA = (taskFunc_t*) realloc (PAA, PAC * sizeof(taskFunc_t));
 #else
@@ -168,10 +194,14 @@ void addTask(pFunc_t pTask, uint16_t timeToCheckTask, bool exec)
    taskFunc_t *ptr = &PAA[PAC-1]; // reduce instructions by acces pointer
    ptr->task.pFunc = pTask;
    ptr->task.timeOut = timeToCheckTask;
-   ptr->nextCallTime = 0;//TIMER_FUNC;
+   ptr->nextCallTime = 0;//TSM_SYS_TICK_TIME + timeToCheckTask;
+#if TSM_CONFIG_USE_EXECUTE_FLAG
    ptr->execute = exec;
+#else 
+   (void)exec;
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
     
-#if USE_MEM_PANIC   
+#if TSM_CONFIG_USE_MEM_PANIC   
   } else {
     deleteAllTasks();
     panic(ALLOC_FAIL | ADD_FAIL);
@@ -196,8 +226,11 @@ void addTaskToArr(tasksContainer_t *pTasksArr, pFunc_t pTask,
   // Add task by reallocate memory
   // for dynamic struct array with pointers to funtions.
   // After, place task and timeout to new index in array.
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
 
-#if USE_MEM_PANIC
+#if TSM_CONFIG_USE_MEM_PANIC
   if (pTasksArr->tasksCount < MAX_TASKS) { // less than 254 tasks
       pTasksArr->tasksCount++;   // increase total tasks
   } else {
@@ -207,7 +240,7 @@ void addTaskToArr(tasksContainer_t *pTasksArr, pFunc_t pTask,
   pTasksArr->tasksCount++;   // increase total tasks
 #endif
 
-#if USE_DYNAMIC_MEM
+#if TSM_CONFIG_USE_DYNAMIC_MEM
   // reallocate block of RAM for new task
   pTasksArr->pArr = (taskFunc_t*) realloc (pTasksArr->pArr,
                                   pTasksArr->tasksCount * sizeof(taskFunc_t));
@@ -223,10 +256,14 @@ void addTaskToArr(tasksContainer_t *pTasksArr, pFunc_t pTask,
     taskFunc_t *ptr = &pTasksArr->pArr[pTasksArr->tasksCount-1]; // same as addTask()
     ptr->task.pFunc = pTask;
     ptr->task.timeOut = timeToCheckTask;
-    ptr->nextCallTime = 0;//TIMER_FUNC;
-    ptr->execute = exec;
+    ptr->nextCallTime = 0;//TSM_SYS_TICK_TIME + timeToCheckTask;
+#if TSM_CONFIG_USE_EXECUTE_FLAG
+   ptr->execute = exec;
+#else 
+   (void)exec;
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
     
-#if USE_MEM_PANIC
+#if TSM_CONFIG_USE_MEM_PANIC
   } else {
     deleteAllTasks();
     panic(ALLOC_FAIL | ADD_TO_ARR_FAIL);
@@ -253,7 +290,9 @@ void addTask_P(const taskParams_t *pTaskP)
   // ptr->task.timeOut = pgm_read_word(&pTaskP->timeOut);
   memcpy_P(&ptr->task, pTaskP, sizeof(taskParams_t));
   ptr->nextCallTime = 0; // every fuction will call immediately
+#if TSM_CONFIG_USE_EXECUTE_FLAG
   ptr->execute = true; // always true...
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 }
 
 /**
@@ -282,6 +321,9 @@ void addTasksArray_P(tasksArr_t *pArr)
  */
 void deleteAllTasks(void)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
   uint8_t *pBuf = (uint8_t*)PAA;
   uint16_t size = maxTasks * sizeof(tasksContainer_t);
   do {
@@ -290,10 +332,10 @@ void deleteAllTasks(void)
   
   PAC = 0;
   resetTaskCount = true;
-#if USE_DYNAMIC_MEM
+#if TSM_CONFIG_USE_DYNAMIC_MEM
   free(PAA);
   PAA = NULL;
-#endif /*USE_DYNAMIC_MEM*/
+#endif /*TSM_CONFIG_USE_DYNAMIC_MEM*/
 }
 
 /**
@@ -303,12 +345,17 @@ void deleteAllTasks(void)
  */
 void deleteTask(pFunc_t pTask)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
   uint8_t taskId = searchTask(pTask);
 
   PAA[taskId].task.pFunc = NULL;    // remove pointer
-  //PAA[taskId].execute = false;     // clear exec flag
+#if TSM_CONFIG_USE_EXECUTE_FLAG
+   //PAA[taskId].execute = false;     // clear exec flag
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
+
   resetTaskCount = true;
-  
   // don't forget to call: defragTasksMemory();
 }
 
@@ -317,46 +364,70 @@ void deleteTask(pFunc_t pTask)
  * @param  pTask: pointer to task what to disable
  * @retval None
  */
+#if TSM_CONFIG_USE_EXECUTE_FLAG
 void disableTask(pFunc_t pTask)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
+
   uint8_t taskId = searchTask(pTask);
-  PAA[taskId].execute = false;
+  PAA[taskId].execute = false;  
 }
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 
 /**
  * @brief  enable execution only for single task
  * @param  pTask: pointer to task what to enable
  * @retval None
  */
+#if TSM_CONFIG_USE_EXECUTE_FLAG
 void enableTask(pFunc_t pTask)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
+
   uint8_t taskId = searchTask(pTask);
   PAA[taskId].execute = true;
 }
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 
 /**
  * @brief  disable execution for all tasks
  * @param  None
  * @retval None
  */
+#if TSM_CONFIG_USE_EXECUTE_FLAG
 void disableAllTasks(void)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
+
   for(uint8_t count = 0; count < maxTasks; count++) {
     PAA[count].execute = false;
   }
 }
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 
 /**
  * @brief  enable execution for all tasks
  * @param  None
  * @retval None
  */
+#if TSM_CONFIG_USE_EXECUTE_FLAG
 void enableAllTasks(void)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
+
   for(uint8_t count = 0; count < maxTasks; count++) {
     PAA[count].execute = true;
   }
 }
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 
 /**
  * @brief  change execution flag only for single task
@@ -364,11 +435,17 @@ void enableAllTasks(void)
  * @param  exec: new flag state
  * @retval None
  */
+#if TSM_CONFIG_USE_EXECUTE_FLAG
 void updateTaskStatus(pFunc_t pTask, bool exec)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
+
   uint8_t taskId = searchTask(pTask);
   PAA[taskId].execute = exec;
 }
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 
 /**
  * @brief  change execution period only for single task
@@ -378,11 +455,14 @@ void updateTaskStatus(pFunc_t pTask, bool exec)
  */
 void updateTaskTimeCheck(pFunc_t pTask, uint16_t timeToCheckTask)
 {
-  uint8_t taskId = searchTask(pTask);
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
 
+  uint8_t taskId = searchTask(pTask);
   taskFunc_t *ptr = &PAA[taskId];
   ptr->task.timeOut = timeToCheckTask;
-  ptr->nextCallTime = TIMER_FUNC + timeToCheckTask;
+  ptr->nextCallTime = TSM_SYS_TICK_TIME + timeToCheckTask;
 }
 
 /**
@@ -395,6 +475,9 @@ void updateTaskTimeCheck(pFunc_t pTask, uint16_t timeToCheckTask)
  */
 void replaceTask(pFunc_t pOldTask, pFunc_t pNewTask, uint16_t timeToCheckTask, bool exec)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
   // Also it combine deleteTask().
   // Just call like this: replaceTask(taskToDelete, NULL, 0, false);
 
@@ -402,9 +485,13 @@ void replaceTask(pFunc_t pOldTask, pFunc_t pNewTask, uint16_t timeToCheckTask, b
 
   taskFunc_t *ptr = &PAA[taskId];
   ptr->task.pFunc = pNewTask;
-  ptr->nextCallTime = TIMER_FUNC + timeToCheckTask;
+  ptr->nextCallTime = TSM_SYS_TICK_TIME + timeToCheckTask;
   ptr->task.timeOut = timeToCheckTask;
+#if TSM_CONFIG_USE_EXECUTE_FLAG
   ptr->execute = exec;
+#else
+  (void)exec;
+#endif /* TSM_CONFIG_USE_EXECUTE_FLAG */
 }
 
 /**
@@ -414,6 +501,9 @@ void replaceTask(pFunc_t pOldTask, pFunc_t pNewTask, uint16_t timeToCheckTask, b
  */
 void defragTasksMemory(void)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
   // After some time of work may appear many holes
   // more than need. It eat much of memory, and that
   // is why need to remove them.
@@ -452,22 +542,22 @@ void defragTasksMemory(void)
       if(PAA[i].task.pFunc != NULL) {
         break;
       } else {
-        nullCount++; // count how much NULL`s need to cut off
+        ++nullCount; // count how much NULL`s need to cut off
       }
     }
     
     PAC -= nullCount; // Remove waste NULL`s
     
-#if USE_DYNAMIC_MEM
+#if TSM_CONFIG_USE_DYNAMIC_MEM
     // free some RAM
     PAA = (taskFunc_t*)realloc(PAA, PAC * sizeof(taskFunc_t));
-#if USE_MEM_PANIC
+#if TSM_CONFIG_USE_MEM_PANIC
     if(PAA == NULL) {
       deleteAllTasks();
       panic(ALLOC_FAIL | DEFRAG_FAIL);
     }
-#endif /*USE_MEM_PANIC*/
-#endif /*USE_DYNAMIC_MEM*/
+#endif /*TSM_CONFIG_USE_MEM_PANIC*/
+#endif /*TSM_CONFIG_USE_DYNAMIC_MEM*/
   }
 }
 
@@ -479,6 +569,9 @@ void defragTasksMemory(void)
  */
 void rmSameTasks(void)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
   // If by some reasons in task arr are two or more
   // same tasks - remove them
   
@@ -513,6 +606,9 @@ void rmSameTasks(void)
  */
 uint8_t searchTask(pFunc_t pTask)
 {
+#if TSM_CONFIG_USE_NULL_PTR_PANIC
+  if(PAA == NULL) panic(NULL_PTR_ACCESS);
+#endif
   uint8_t i = 0;
   taskFunc_t *ptr = &PAA[0]; // store pointer to X register
   
@@ -539,7 +635,7 @@ uint8_t searchTask(pFunc_t pTask)
   } while((++i) < PAC);
 #endif
 
-#if USE_MEM_PANIC
+#if TSM_CONFIG_USE_MEM_PANIC
   panic(FIND_TASK_FAIL | OVER_RANGE_FAIL); // warn what program will work incorrect
 #endif
 
@@ -559,7 +655,7 @@ void initTasksArr(tasksContainer_t *tasks, taskFunc_t *taskArr, uint8_t maximumT
 {
   pCurrentArrTasks = tasks;
   PAA = taskArr;
-#if !USE_DYNAMIC_MEM
+#if !TSM_CONFIG_USE_DYNAMIC_MEM
   maxTasks = maximumTasks;
 #endif
 }
@@ -586,8 +682,8 @@ uint16_t *getCurrentTaskArray(void)
   return (uint16_t *)pCurrentArrTasks;
 }
 
-#if !USE_DYNAMIC_MEM
-// Use only when USE_DYNAMIC_MEM is 0
+#if !TSM_CONFIG_USE_DYNAMIC_MEM
+// Use only when TSM_CONFIG_USE_DYNAMIC_MEM is 0
 void setMaxTasks(uint8_t maximumTasks)
 {
   maxTasks = maximumTasks;
@@ -604,12 +700,12 @@ __attribute__ ((noreturn)) void panic(uint8_t errorCode)
 {
   (void)errorCode;
   
-#if USE_MEM_PANIC
+#if TSM_CONFIG_USE_MEM_PANIC
   char errBuf[3];
   
   itoa(errorCode, errBuf, 16);
   
- #ifdef USE_GFX_LIB
+ #if TSM_CONFIG_USE_GFX_LIB
   fpSetCursor(0,0);
     
   fpFillRect(0,0,GFX_SCR_W,GFX_SCR_H,COLOR_BLUE);
@@ -619,8 +715,8 @@ __attribute__ ((noreturn)) void panic(uint8_t errorCode)
   fPrint(errBuf);
  #else
   // place here some another way to print error code
- #endif /*USE_GFX_LIB*/
-#endif /*USE_MEM_PANIC*/
+ #endif /*TSM_CONFIG_USE_GFX_LIB*/
+#endif /*TSM_CONFIG_USE_MEM_PANIC*/
   
   while(1); // panic mode: on
 }
@@ -652,7 +748,14 @@ uint16_t avalibleRam(void) // space between the heap and the stack
 #endif
 }
 
-#ifdef USE_GFX_LIB
+#if TSM_CONFIG_USE_IDLE_FUNC
+void setIdleFunc(pFunc_t pTask)
+{
+  pFuncIDLE = pFunc;
+}
+#endif
+
+#if TSM_CONFIG_USE_GFX_LIB
 /**
  * @brief  print all tasks adreses stored in RAM
  * @param  offset: position in pixels X ordinate
@@ -697,5 +800,5 @@ void setGfxFunc(fPrint_t fPrint, fFillRect_t fFillRect, fSetCursor_t fSetCursor,
   fpSetCursor = fSetCursor;
   fpDrawFastVLine = fDrawFastVLine;
 }
-#endif /*USE_GFX_LIB*/
+#endif /*TSM_CONFIG_USE_GFX_LIB*/
 // ------------------------------------------------------------------- //

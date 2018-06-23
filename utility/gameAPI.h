@@ -24,6 +24,8 @@
 extern "C"{
 #endif
 
+#define ESPLORA_OPTIMIZE
+
 //---------------------------------------------------------------------------//
 // this macros remove monstro constructions...
 #define getConstCharPtr(a, b) (const uint8_t*)pgm_read_word(&(a[b]))
