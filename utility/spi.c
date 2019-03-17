@@ -62,6 +62,25 @@ void sendData16_SPI1(uint16_t data)
   SPDR_TX_WAIT("nop");
 }
 
+// call this function instead two calls sendData16_SPI1 can save ~2.1us
+void sendData32_SPI1(uint16_t data0, uint16_t data1)
+{
+  SPDR_t in0 = {.val = data0};
+  SPDR_t in1 = {.val = data1};
+  
+  SPDR = in0.msb;
+  SPDR_TX_WAIT("nop");
+  
+  SPDR = in0.lsb;
+  SPDR_TX_WAIT("nop");
+  
+  SPDR = in1.msb;
+  SPDR_TX_WAIT("nop");
+  
+  SPDR = in1.lsb;
+  SPDR_TX_WAIT("nop");
+}
+
 void floodData16_SPI1(uint16_t data, uint16_t len)
 {
   SPDR_t in = {.val = data};
@@ -101,9 +120,7 @@ inline void sendData8Dirt_SPI1(uint8_t bData, uint8_t len)
 
 void sendArrSPI(uint8_t *buf, uint16_t size)
 {
-  uint8_t count;
-  
-  for(count = 0; count < size; count++) {
+  for(uint8_t count = 0; count < size; count++) {
     SPDR = buf[count];
     SPDR_TX_WAIT("nop");
   }

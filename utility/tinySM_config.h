@@ -8,12 +8,12 @@
 * Where to get systick function or global variable
 * with current system time in milleseconds
 */
-#include "systicktimer.h"
+#define TSM_CONFIG_USE_ARDUINO_LIBS 0
 
 //------------------------ Usefull LIB Flags --------------------------------//
 /*
  * If set this to 0, then:
- *   - memalloc;
+ *   - malloc;
  *   - realloc
  *   - free.
  * will be unavaliable!
@@ -30,6 +30,18 @@
  * where X is number of elements(Tasks);
  */
 #define TSM_CONFIG_USE_DYNAMIC_MEM 0
+
+/*
+ * How much tasks if static memory managment is selected.
+ * This setup is VERY IMPORTANT!!
+ * Set correct number of your tasks in program
+ * if flag TSM_CONFIG_USE_DYNAMIC_MEM is set to '0'
+ *
+ * Static allocation in global RAM.
+ */
+#if !TSM_CONFIG_USE_DYNAMIC_MEM
+#define TSM_CONFIG_NUM_WORK_TASKS        20
+#endif /* TSM_CONFIG_USE_DYNAMIC_MEM */
 
 /*
  * If you are shure what:
@@ -63,13 +75,13 @@
 
 /*
  * Set this one to 1 and it will periodically call
- * defragTasksMemory() func by default.
+ * vTSMDefragTasksMemory() func by default.
  * And it not depend on current task array!
  */
 #define TSM_CONFIG_USE_AUTO_DEFRAG 0
 
 /* 
- * Set in seconds how often defragTasksMemory() will call
+ * Set in seconds how often vTSMDefragTasksMemory() will call
  */
 #if TSM_CONFIG_USE_AUTO_DEFRAG
   #define TSM_CONFIG_AUTO_DEFRAG_TIMEOUT 10 SEC
@@ -77,13 +89,13 @@
 
 /*
  * Set this one to 1 and it will periodically call
- * rmDuplicateTasks() func by default.
+ * vTSMrmDuplicateTasks() func by default.
  * And it not depend on current task array!
  */
 #define TSM_CONFIG_USE_AUTO_GEMINI 0
 
 /*
- * Set in seconds how often rmDuplicateTasks() will call
+ * Set in seconds how often vTSMrmDuplicateTasks() will call
  */
 #if TSM_CONFIG_USE_AUTO_GEMINI
   #define TSM_CONFIG_GEMINI_TIMEOUT 12 SEC
@@ -94,11 +106,11 @@
  * extra RAM and ROM then, set to 0.
  * 
  * When disabled, next functions removed:
- *  - updateTaskStatus();
- *  - disableTask();
- *  - enableTask();
- *  - disableAllTasks();
- *  - enableAllTasks();
+ *  - vTSMUpdateTaskStatus();
+ *  - vTSMDisableTask();
+ *  - vTSMEnableTask();
+ *  - vTSMDisableAllTasks();
+ *  - vTSMEnableAllTasks();
  * Moreover "execute" flag no longer avaliable and not used.
  */
 #define TSM_CONFIG_USE_EXECUTE_FLAG 1
@@ -114,7 +126,7 @@
  * Set this one and enable otuput errors on screen.
  * Add depedencies from gfx lib.
  *
- * NOTE: place your specific way to print error codes in panic() func!
+ * NOTE: place your specific way to print error codes in vTSMPanic() func!
  */
 #define TSM_CONFIG_USE_GFX_LIB 0
 
@@ -122,12 +134,22 @@
  * Select search methode.
  * LINEAR is reque less ROM and RAM, but slow
  */
-#define LINEAR_SEARCH
+#define TSM_CONFIG_LINEAR_SEARCH
 
 /*
  * Place here your system tick timer function or global variable
  */
-#define TSM_SYS_TICK_TIME uptime()
+#if TSM_CONFIG_USE_ARDUINO_LIBS
+  #include  "Arduino.h"
+  #define TSM_SYS_TICK_TIME millis() // In case of Arduino libs usage
+#else
+  #include "systicktimer.h"
+  #define TSM_SYS_TICK_TIME uptime() // Your own implementation
+
+  #if SYS_TIMER_CONFIG_USE_16_BIT
+  #warning "Maximum period for tasks is set to 65,5 seconds!"
+  #endif 
+#endif
 
 /*
  *
@@ -144,5 +166,15 @@
  * cause to stop all tasks.
  */
 #define TSM_CONFIG_USE_SYS_TICK_PROTECT 0 // not implemented feature
+
+
+/*
+ * Enable/Disable deprecated features like:
+ * vTSMInitTasksStorage();
+ *
+ * Try not to use deprecated features, they are may be deleted at any time.
+ */
+#define TSM_CONFIG_ENABLE_DEPRECATED_FEATURES 0
+
 
 #endif /*_TINY_STATE_MACHINE_CONFIG_H*/

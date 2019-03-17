@@ -178,15 +178,13 @@ void tftSetAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
   sendData8_SPI1(ST7735_CASET); // Column addr set
   
   SET_TFT_DC_HI;          // writeData:
-  sendData16_SPI1(x0);    // XSTART
-  sendData16_SPI1(x1);    // XEND
+  sendData32_SPI1(x0, x1); // XSTART, XEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RASET); // Row addr set
   
   SET_TFT_DC_HI;           // writeData:
-  sendData16_SPI1(y0);     // YSTART
-  sendData16_SPI1(y1);     // YEND
+  sendData32_SPI1(y0, y1);     // YSTART,YEND
 
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RAMWR); // write to RAM
@@ -202,15 +200,13 @@ void tftSetVAddrWindow(uint8_t x0, uint8_t y0, uint8_t y1)
   sendData8_SPI1(ST7735_CASET); // Column addr set
   
   SET_TFT_DC_HI;          // writeData:
-  sendData16_SPI1(x0);    // XSTART
-  sendData16_SPI1(x0);    // XEND
+  sendData32_SPI1(x0, x0); // XSTART, XEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RASET); // Row addr set
   
   SET_TFT_DC_HI;           // writeData:
-  sendData16_SPI1(y0);     // YSTART
-  sendData16_SPI1(y1);     // YEND
+  sendData32_SPI1(y0, y1);     // YSTART,YEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RAMWR); // write to RAM
@@ -226,15 +222,13 @@ void tftSetHAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1)
   sendData8_SPI1(ST7735_CASET); // Column addr set
   
   SET_TFT_DC_HI;          // writeData:
-  sendData16_SPI1(x0);    // XSTART
-  sendData16_SPI1(x1);    // XEND
+  sendData32_SPI1(x0, x1); // XSTART, XEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RASET); // Row addr set
   
   SET_TFT_DC_HI;           // writeData:
-  sendData16_SPI1(y0);     // YSTART
-  sendData16_SPI1(y0);     // YEND
+  sendData32_SPI1(y0, y0);     // YSTART,YEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RAMWR); // write to RAM
@@ -250,15 +244,13 @@ void tftSetAddrPixel(uint8_t x0, uint8_t y0)
   sendData8_SPI1(ST7735_CASET); // Column addr set
   
   SET_TFT_DC_HI;          // writeData:
-  sendData16_SPI1(x0);    // XSTART
-  sendData16_SPI1(x0);    // XEND
+  sendData32_SPI1(x0, x0); // XSTART, XEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RASET); // Row addr set
   
   SET_TFT_DC_HI;           // writeData:
-  sendData16_SPI1(y0);     // YSTART
-  sendData16_SPI1(y0);     // YEND
+  sendData32_SPI1(y0, y0);     // YSTART,YEND
   
   SET_TFT_DC_LOW;               // writecommand:
   sendData8_SPI1(ST7735_RAMWR); // write to RAM

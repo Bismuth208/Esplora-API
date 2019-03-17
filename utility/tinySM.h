@@ -1,6 +1,7 @@
 #ifndef _TINY_STATE_MACHINE_H
 #define _TINY_STATE_MACHINE_H
 
+// Include file from you project with local setting for TinySM
 #include "tinySM_config.h"
 
 #define MAX_TASKS   0xFE
@@ -30,11 +31,11 @@
 #define NULL_PTR_ACCESS         0x0F    // PAA was not inited!
 
 //                                      WHERE IT`S HAPPEN:
-#define CHECK_TASKS_FAIL        0x00    // runTasks()
-#define ADD_FAIL                0x10    // addTask()
-#define ADD_TO_ARR_FAIL         0x20    // addTaskToArr()
-#define DEFRAG_FAIL             0x30    // defragTasksMemory()
-#define FIND_TASK_FAIL          0x40    // searchTask()
+#define CHECK_TASKS_FAIL        0x00    // vTSMRunTasks()
+#define ADD_FAIL                0x10    // vTSMAddTask()
+#define ADD_TO_ARR_FAIL         0x20    // vTSMAddTaskToArr()
+#define DEFRAG_FAIL             0x30    // vTSMDefragTasksMemory()
+#define FIND_TASK_FAIL          0x40    // ucTSMSearchTask()
 //--------------------------------------//
 
 //---------- Bool definitions --------------//
@@ -49,11 +50,19 @@
 #ifndef false
  #define false 0
 #endif
+
+//------------------------------------------//
+#if SYS_TIMER_CONFIG_USE_16_BIT
+  #define TSM_TIME_TYPE uint16_t
+#else
+  #define TSM_TIME_TYPE uint32_t
+#endif
+
 //------------------------------------------//
 
 #define T(a) a##Task
 #define TASK_N(a)     const taskParams_t T(a)
-#define TASK(a,b)     TASK_N(a) PROGMEM = {.pFunc=a, .timeOut=b}
+#define TASK(a,b)     TASK_N(a) PROGMEM = {.xFunc=a, .usTimeOut=b}
 #define TASK_P(a)     (taskParams_t*)&T(a)
 #define TASK_ARR_N(a) const tasksArr_t a##TasksArr[]
 #define TASK_ARR(a)   TASK_ARR_N(a) PROGMEM
@@ -81,41 +90,41 @@ typedef void (*fFillRect_t)(uint16_t, uint16_t, uint16_t, uint16_t, uint16_t);
 typedef struct {
 #ifdef __AVR__
   union  {
-    pFunc_t pFunc;    // on avr it get 2 bytes
+    pFunc_t xFunc;    // on avr it get 2 bytes
     struct {
       uint8_t hi;
       uint8_t low;
     };
   };
 #else
-  pFunc_t pFunc;     // on 32-bit arch it get 4 bytes
-#endif /* __AVR__*/
+  pFunc_t xFunc;     // on 32-bit arch it get 4 bytes
+#endif /* __AVR__ */
   
-  uint16_t timeOut;   // 65,5 seconds will be enougth? (65535 millis / 1000)
+  uint16_t usTimeOut;   // 65,5 seconds will be enougth? (65535 millis / 1000)
 } taskParams_t;
   
-typedef struct {            // 9 bytes RAM(*)
-  uint32_t nextCallTime;  	// when will be next func call
-  taskParams_t task;
+typedef struct {                  // 9 bytes RAM(*)
+  TSM_TIME_TYPE ulLastCallTime;   // when was last func call
+  taskParams_t xTask;
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-  uint8_t execute;      		// status flag; need exec or not
+  uint8_t ucExecute;      		    // status flag; need exec or not
 #endif
   /* // at this moment not need
   struct {
-  	uint8_t execute 	:1;		// status flag; need exec or not
-  	uint8_t freeRam 	:7;		// not implemented features
-    //uint8_t priority 	:2;		// priority of task 0-3
+  	uint8_t ucExecute 	:1;		// status flag; need exec or not
+  	uint8_t ucFreeRam 	:7;		// not implemented features
+    //uint8_t ucPriority 	:2;		// priority of xTask 0-3
   };
    */
-  // 7 or 5 bytes align here
-  //whole size: avr = 9 bytes, arm = 11 bytes
+  // whole size: avr = 7 bytes, arm = 9 bytes
+  // or avr = 5 bytes if SYS_TIMER_CONFIG_USE_16_BIT is set
+  // or avr = 4 bytes if TSM_CONFIG_USE_EXECUTE_FLAG is not set + above flag is set
 } taskFunc_t;
 
 typedef struct {            // (2 bytes (*) + tasksCount * taskFunc_t) + 1 bytes RAM
-  taskFunc_t *pArr;    // pointer to array whith tasks
-  uint8_t tasksCount;       // Note: 0xFF reserved as NULL !
-  // 1 or 3 bytes align here
-  // whole size: avr = 4 bytes, arm = 8 bytes.
+  taskFunc_t *pxTasksArr;   // pointer to array whith tasks
+  uint8_t ucTasksCount;     // Note: 0xFF reserved as NULL !
+  // whole size: avr = 3 bytes, arm = 5 bytes.
 } tasksContainer_t;
 #pragma pack(pop)
   
@@ -125,45 +134,48 @@ typedef const taskParams_t * const tasksArr_t;
 //---------------------------------------------------------------------------//
   
 //------------------------ Function Prototypes ------------------------------//
-void addTaskToArr(tasksContainer_t *pTasksArr, pFunc_t pTask, uint16_t timeToCheckTask, bool exec);
-void addTask(pFunc_t pTask, uint16_t timeToCheckTask, bool exec);
-void addTask_P(const taskParams_t *pTaskP);
-void addTasksArray_P(tasksArr_t *pArr);
-void replaceTask(pFunc_t pOldTask, pFunc_t pNewTask, uint16_t timeToCheckTask, bool exec);
-void updateTaskTimeCheck(pFunc_t pTask, uint16_t timeToCheckTask);
-void deleteTask(pFunc_t pTask);
-void deleteAllTasks(void);
+void vTSMAddTaskToArr(tasksContainer_t *pxTasksStorage, pFunc_t xTask, uint16_t usTimeToCheckTask, bool ucExec);
+void vTSMAddTask(pFunc_t xTask, uint16_t usTimeToCheckTask, bool ucExec);
+void vTSMAddTask_P(const taskParams_t *pxTaskP);
+void vTSMAddTasksArray_P(tasksArr_t *pxArr);
+void vTSMReplaceTask(pFunc_t xOldTask, pFunc_t xNewTask, uint16_t usTimeToCheckTask, bool ucExec);
+void vTSMUpdateTaskTimeCheck(pFunc_t xTask, uint16_t usTimeToCheckTask);
+void vTSMDeleteTask(pFunc_t xTask);
+void vTSMDeleteAllTasks(void);
 
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-void updateTaskStatus(pFunc_t oldTask, bool exec);
-void disableTask(pFunc_t pTask);
-void enableTask(pFunc_t pTask);
-void disableAllTasks(void);
-void enableAllTasks(void);
+void vTSMUpdateTaskStatus(pFunc_t xOldTask, bool ucExec);
+void vTSMDisableTask(pFunc_t xTask);
+void vTSMEnableTask(pFunc_t xTask);
+void vTSMDisableAllTasks(void);
+void vTSMEnableAllTasks(void);
 #endif
 
-__attribute__ ((noreturn)) void runTasks(void);
+__attribute__ ((noreturn)) void vTSMRunTasks(void);
 
-void initTasksArr(tasksContainer_t *tasks, taskFunc_t *taskArr, uint8_t maximumTasks);
-tasksContainer_t *setTaskArray(tasksContainer_t *pNewTasksArr);
-uint16_t *getCurrentTaskArray(void);
-void setMaxTasks(uint8_t maximumTasks);
+#if TSM_CONFIG_ENABLE_DEPRECATED_FEATURES
+void vTSMInitTasksStorage(tasksContainer_t *pxNewTasksStorage, taskFunc_t *pxTasksArr, uint8_t ucMaximumTasks);
+#endif
+
+tasksContainer_t *pxTSMSetTasksStorage(tasksContainer_t *pxNewTasksStorage);
+tasksContainer_t *pxTSMGetTasksStorage(void);
+void vTSMSetMaxTasks(uint8_t ucMaximumTasks);
   
-void rmSameTasks(void);  // still not ready
-void defragTasksMemory(void);
-uint8_t searchTask(pFunc_t pTask);
-uint8_t avalibleTasks(void);
-uint16_t avalibleRam(void);
-__attribute__ ((noreturn)) void panic(uint8_t errorCode);
+void vTSMrmSameTasks(void);  // still not ready
+void vTSMDefragTasksMemory(void);
+uint8_t ucTSMSearchTask(pFunc_t xTask);
+uint8_t ucTSMAvalibleTasks(void);
+uint16_t usTSMAvalibleRam(void);
+__attribute__ ((noreturn)) void vTSMPanic(uint8_t ucErrorCode);
   
-void printTasksMem(uint16_t offset);
+void vTSMPrintTasksMem(uint16_t usOffset);
 
 #if TSM_CONFIG_USE_IDLE_FUNC
-void setIdleFunc(pFunc_t pTask);
+void vTSMSetIdleFunc(pFunc_t xTask);
 #endif  
 
 #if TSM_CONFIG_USE_GFX_LIB
-void setGfxFunc(fPrint_t, fFillRect_t, fSetCursor_t, fDrawFastVLine_t);
+void vTSMSetGfxFunc(fPrint_t, fFillRect_t, fSetCursor_t, fDrawFastVLine_t);
 #endif
 //---------------------------------------------------------------------------//
     

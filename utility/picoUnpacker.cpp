@@ -68,7 +68,7 @@
 // unsafe but it works on avr, and stm32
 #define setPicWData(a)   (*(uint16_t*)(a))
 #ifdef __AVR__
- #define getPicWData(a, b)   pgm_read_word(&(a[(b - DICT_MARK)<<1]))
+ #define getPicWData(a, b)  pgm_read_word(&(a[(b - DICT_MARK)<<1]))
 #else
  #define getPicByte(a)      (*(const uint8_t *)(a))
  #define getPicWData(a, b)  (*(const uint16_t*)(&(a[(b - DICT_MARK)<<1]))
@@ -85,16 +85,13 @@ static uint8_t alphaReplaceColorId = 0;
 
 inline uint8_t findPackedMark(uint8_t *ptr)
 {
-  uint8_t status = 0;
   do {
     if(*ptr >= DICT_MARK) {
-       status = 1;
-       break;
+       return 1;
     }
-    ++ptr;
-  } while(*ptr != PIC_DATA_END);
+  } while(*(++ptr) != PIC_DATA_END);
   
-  return status;
+  return 0;
 }
 
 inline void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
@@ -168,6 +165,7 @@ inline uint8_t *unpackBuf_DIC(const uint8_t *pDict)
 // extended RLE, based on dictionary, a bit slower but better compression
 void drawPico_DIC_P(uint8_t x, uint8_t y, pic_t *pPic)
 {
+  // asm volatile("cli"); // for debug purpose
   auto tmpData = getPicSize(pPic, 0);
   tftSetAddrWindow(x, y, x+tmpData.u8Data1, y+tmpData.u8Data2);
   
@@ -201,6 +199,7 @@ void drawPico_DIC_P(uint8_t x, uint8_t y, pic_t *pPic)
       printBuf_RLE( dictMarker ? unpackBuf_DIC(pDict) : &buf_packed[0] ); // V2V3 decoder
     }
   } while(unfoldPos);
+  // asm volatile("sei"); // for debug purpose
 }
 
 // =============================================================== //

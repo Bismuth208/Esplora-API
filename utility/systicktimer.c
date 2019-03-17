@@ -26,43 +26,65 @@
 #define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
 #define FRACT_MAX (1000 >> 3)
 
-static volatile uint32_t timer0_overflow_count = 0;
-static volatile uint32_t timer0_millis = 0;
+//------------------------------------------//
+#if SYS_TIMER_CONFIG_USE_16_BIT
+  #define SYS_TIME_TYPE uint16_t
+#else
+  #define SYS_TIME_TYPE uint32_t
+#endif
+//------------------------------------------//
+
+
+static volatile SYS_TIME_TYPE timer0_millis = 0;
 static volatile uint8_t timer0_fract = 0;
+#if !SYS_TIMER_CONFIG_USE_16_BIT
+static volatile uint32_t timer0_overflow_count = 0;
+#endif
 
 ISR(TIMER0_OVF_vect)
 {
-	// copy these to local variables so they can be stored in registers
-	// (volatile variables must be read from memory on every access)
-	uint32_t m = timer0_millis;
-	uint8_t f = timer0_fract;
+  // copy these to local variables so they can be stored in registers
+  // (volatile variables must be read from memory on every access)
+  SYS_TIME_TYPE m = timer0_millis;   
+  uint8_t f = timer0_fract;
 
-	m += MILLIS_INC;
-	f += FRACT_INC;
-	if (f >= FRACT_MAX) {
-		f -= FRACT_MAX;
-		++m;
-	}
+  m += MILLIS_INC;
+  f += FRACT_INC;
+  if (f >= FRACT_MAX) {
+	f -= FRACT_MAX;
+	++m;
+  }
 
-	timer0_fract = f;
-	timer0_millis = m;
-	++timer0_overflow_count;
+  timer0_fract = f;
+  timer0_millis = m;
+
+#if !SYS_TIMER_CONFIG_USE_16_BIT
+  ++timer0_overflow_count;
+#endif
 }
 
-uint32_t uptime()
+SYS_TIME_TYPE uptime()
 {
-	uint8_t oldSREG = SREG;
+  uint8_t oldSREG = SREG;
 
-	// disable interrupts while we read timer0_millis or we might get an
-	// inconsistent value (e.g. in the middle of a write to timer0_millis)
-	cli();
-	uint32_t m = timer0_millis;
-	SREG = oldSREG;
+  // disable interrupts while we read timer0_millis or we might get an
+  // inconsistent value (e.g. in the middle of a write to timer0_millis)
+  cli();
+  SYS_TIME_TYPE m = timer0_millis;
+  SREG = oldSREG;
   sei();
 
-	return m;
+  return m;
 }
 
+void _delayMS(uint16_t timetoloop)
+{
+  do {
+    _delay_ms(1);
+  } while(--timetoloop);
+}
+
+#if !SYS_TIMER_CONFIG_USE_16_BIT
 uint32_t micros(void)
 {
   cli();
@@ -74,13 +96,6 @@ uint32_t micros(void)
   sei();
   
   return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
-}
-
-void _delayMS(uint16_t timetoloop)
-{
-  do {
-    _delay_ms(1);
-  } while(--timetoloop);
 }
 
 /* Delay for the given number of microseconds.  Assumes a 1, 8, 12, 16, 20 or 24 MHz clock. */
@@ -204,6 +219,7 @@ void _delayMicroseconds(uint16_t us)
                           );
     // return = 4 cycles
 }
+#endif /* SYS_TIMER_CONFIG_USE_16_BIT */
 
 void initSysTickTimer()
 {
