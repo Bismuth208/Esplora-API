@@ -346,7 +346,7 @@ void vTSMDeleteAllTasks(void)
   PAA_NULL_CHECK();
 
   uint8_t *pucBuf = (uint8_t*)PAA;
-  uint16_t usSize = ucMaxTasks * sizeof(tasksContainer_t);
+  uint16_t usSize = ucMaxTasks * sizeof(taskFunc_t);
   do {
     *pucBuf++ = 0x00;
   } while (--usSize);
