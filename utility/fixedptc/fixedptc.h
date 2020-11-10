@@ -134,7 +134,7 @@ typedef	__uint128_t fixedptud;
 
 
 /* Multiplies two fixedpt numbers, returns the result. */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_mul(fixedpt A, fixedpt B)
 {
 	return (((fixedptd)A * (fixedptd)B) >> FIXEDPT_FBITS);
@@ -142,7 +142,7 @@ fixedpt_mul(fixedpt A, fixedpt B)
 
 
 /* Divides two fixedpt numbers, returns the result. */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_div(fixedpt A, fixedpt B)
 {
 	return (((fixedptd)A << FIXEDPT_FBITS) / (fixedptd)B);
@@ -162,7 +162,7 @@ fixedpt_div(fixedpt A, fixedpt B)
  * be returned, meaning there will be invalid, bogus digits outside the
  * specified precisions.
  */
-static inline void
+__attribute__ ((optimize("O2"))) static inline void
 fixedpt_str(fixedpt A, char *str, int max_dec)
 {
 	int ndec = 0, slen = 0;
@@ -220,7 +220,7 @@ fixedpt_str(fixedpt A, char *str, int max_dec)
 
 /* Converts the given fixedpt number into a string, using a static
  * (non-threadsafe) string buffer */
-static inline char*
+__attribute__ ((optimize("O2"))) static inline char*
 fixedpt_cstr(const fixedpt A, const int max_dec)
 {
 	static char str[25];
@@ -231,7 +231,7 @@ fixedpt_cstr(const fixedpt A, const int max_dec)
 
 
 /* Returns the square root of the given number, or -1 in case of error */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_sqrt(fixedpt A)
 {
 	int invert = 0;
@@ -268,7 +268,7 @@ fixedpt_sqrt(fixedpt A)
 
 /* Returns the sine of the given fixedpt number. 
  * Note: the loss of precision is extraordinary! */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_sin(fixedpt fp)
 {
 	int sign = 1;
@@ -302,7 +302,7 @@ fixedpt_sin(fixedpt fp)
 
 
 /* Returns the cosine of the given fixedpt number */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_cos(fixedpt A)
 {
 	return (fixedpt_sin(FIXEDPT_HALF_PI - A));
@@ -310,7 +310,7 @@ fixedpt_cos(fixedpt A)
 
 
 /* Returns the tangens of the given fixedpt number */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_tan(fixedpt A)
 {
 	return fixedpt_div(fixedpt_sin(A), fixedpt_cos(A));
@@ -318,7 +318,7 @@ fixedpt_tan(fixedpt A)
 
 
 /* Returns the value exp(x), i.e. e^x of the given fixedpt number. */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_exp(fixedpt fp)
 {
 	fixedpt xabs, k, z, R, xp;
@@ -357,7 +357,7 @@ fixedpt_exp(fixedpt fp)
 
 
 /* Returns the natural logarithm of the given fixedpt number. */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_ln(fixedpt x)
 {
 	fixedpt log2, xi;
@@ -398,7 +398,7 @@ fixedpt_ln(fixedpt x)
 	
 
 /* Returns the logarithm of the given base of the given fixedpt number */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_log(fixedpt x, fixedpt base)
 {
 	return (fixedpt_div(fixedpt_ln(x), fixedpt_ln(base)));
@@ -406,7 +406,7 @@ fixedpt_log(fixedpt x, fixedpt base)
 
 
 /* Return the power value (n^exp) of the given fixedpt numbers */
-static inline fixedpt
+__attribute__ ((optimize("O2"))) static inline fixedpt
 fixedpt_pow(fixedpt n, fixedpt exp)
 {
 	if (exp == 0)

@@ -41,7 +41,7 @@ static volatile uint8_t timer0_fract = 0;
 static volatile uint32_t timer0_overflow_count = 0;
 #endif
 
-ISR(TIMER0_OVF_vect)
+__attribute__ ((optimize("O2"))) ISR(TIMER0_OVF_vect)
 {
   // copy these to local variables so they can be stored in registers
   // (volatile variables must be read from memory on every access)
@@ -63,7 +63,7 @@ ISR(TIMER0_OVF_vect)
 #endif
 }
 
-SYS_TIME_TYPE uptime()
+__attribute__ ((optimize("O2"))) SYS_TIME_TYPE uptime()
 {
   uint8_t oldSREG = SREG;
 
@@ -77,7 +77,7 @@ SYS_TIME_TYPE uptime()
   return m;
 }
 
-void _delayMS(uint16_t timetoloop)
+__attribute__ ((optimize("O2"))) void _delayMS(uint16_t timetoloop)
 {
   do {
     _delay_ms(1);
@@ -85,7 +85,7 @@ void _delayMS(uint16_t timetoloop)
 }
 
 #if !SYS_TIMER_CONFIG_USE_16_BIT
-uint32_t micros(void)
+__attribute__ ((optimize("O2"))) uint32_t micros(void)
 {
   cli();
   uint32_t m = timer0_overflow_count;
@@ -99,7 +99,7 @@ uint32_t micros(void)
 }
 
 /* Delay for the given number of microseconds.  Assumes a 1, 8, 12, 16, 20 or 24 MHz clock. */
-void _delayMicroseconds(uint16_t us)
+__attribute__ ((optimize("O2"))) void _delayMicroseconds(uint16_t us)
 {
     // call = 4 cycles + 2 to 4 cycles to init us(2 for constant delay, 4 for variable)
     
@@ -221,7 +221,7 @@ void _delayMicroseconds(uint16_t us)
 }
 #endif /* SYS_TIMER_CONFIG_USE_16_BIT */
 
-void initSysTickTimer()
+__attribute__ ((optimize("O2"))) void initSysTickTimer()
 {
     sei();
     

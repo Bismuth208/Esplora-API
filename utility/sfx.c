@@ -135,7 +135,7 @@ const uint8_t _halfPeriods[NUM_PITCH] PROGMEM= {246,232,219,207,195,184,174,164,
 
 // ---------------------------------------------- //
 
-void initSFX(void)
+__attribute__ ((optimize("O2"))) void initSFX(void)
 {
 	//prescaler = 1; // for 20 fps and every 50 ms
 	for(uint8_t i=0; i<NUM_CHANNELS; i++){
@@ -166,7 +166,7 @@ void initSFX(void)
   sei(); // enable all interrupts
 }
 
-void sfxUpdateAll(void)
+__attribute__ ((optimize("O2"))) void sfxUpdateAll(void)
 {
   for(uint8_t i=0; i<NUM_CHANNELS; i++) {
     sfxUpdateTrack(i);
@@ -175,7 +175,7 @@ void sfxUpdateAll(void)
   }
 }
 
-void sfxPlayTrack(const uint16_t *track, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxPlayTrack(const uint16_t *track, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -186,7 +186,7 @@ void sfxPlayTrack(const uint16_t *track, uint8_t channel)
 	trackIsPlaying[channel] = true;
 }
 
-void sfxStopTrack(uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxStopTrack(uint8_t channel)
 {
   if(channel >= NUM_CHANNELS)
     return;
@@ -195,14 +195,14 @@ void sfxStopTrack(uint8_t channel)
   sfxStopPattern(channel);
 }
 
-void sfxStopAllTracks(void)
+__attribute__ ((optimize("O2"))) void sfxStopAllTracks(void)
 {
   for(uint8_t i=0; i<NUM_CHANNELS; i++) {
     sfxStopTrack(i);
   }
 }
 
-void sfxUpdateTrack(uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxUpdateTrack(uint8_t channel)
 {
   if(channel >= NUM_CHANNELS)
     return;
@@ -220,14 +220,14 @@ void sfxUpdateTrack(uint8_t channel)
   }
 }
 
-void sfxUpdateAllTracks(void)
+__attribute__ ((optimize("O2"))) void sfxUpdateAllTracks(void)
 {
   for(uint8_t i=0; i<NUM_CHANNELS; i++) {
     sfxUpdateTrack(i);
   }
 }
 
-void sfxChangePatternSet(const uint16_t * const *patterns, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxChangePatternSet(const uint16_t * const *patterns, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -235,7 +235,7 @@ void sfxChangePatternSet(const uint16_t * const *patterns, uint8_t channel)
 	patternSet[channel] = (uint16_t**)patterns;
 }
 
-void sfxPlayPattern(const uint16_t *pattern, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxPlayPattern(const uint16_t *pattern, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -251,7 +251,7 @@ void sfxPlayPattern(const uint16_t *pattern, uint8_t channel)
 	tremoloStepDuration[channel] = 0;
 }
 
-void sfxChangeInstrumentSet(const uint16_t * const *instruments, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxChangeInstrumentSet(const uint16_t * const *instruments, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -259,7 +259,7 @@ void sfxChangeInstrumentSet(const uint16_t * const *instruments, uint8_t channel
 	instrumentSet[channel] = (uint16_t**)instruments;
 }
 
-void sfxUpdatePattern(uint8_t i)
+__attribute__ ((optimize("O2"))) void sfxUpdatePattern(uint8_t i)
 {
   if(i >= NUM_CHANNELS)
     return;
@@ -308,21 +308,21 @@ void sfxUpdatePattern(uint8_t i)
   }
 }
 
-void sfxUpdateAllPatterns(void)
+__attribute__ ((optimize("O2"))) void sfxUpdateAllPatterns(void)
 {
   for(uint8_t i=0; i<NUM_CHANNELS; i++) {
     sfxUpdatePattern(i);
   }
 }
 
-void sfxStopAllPatterns(void)
+__attribute__ ((optimize("O2"))) void sfxStopAllPatterns(void)
 {
   for(uint8_t i=0; i<NUM_CHANNELS; i++) {
     sfxStopPattern(i);
   }
 }
 
-void sfxStopPattern(uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxStopPattern(uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -331,7 +331,7 @@ void sfxStopPattern(uint8_t channel)
 	patternIsPlaying[channel] = false;
 }
 
-void sfxCommand(uint8_t cmd, uint8_t X, int8_t Y, uint8_t i)
+__attribute__ ((optimize("O2"))) void sfxCommand(uint8_t cmd, uint8_t X, int8_t Y, uint8_t i)
 {
 	if(i >= NUM_CHANNELS)
 		return;
@@ -370,7 +370,7 @@ void sfxCommand(uint8_t cmd, uint8_t X, int8_t Y, uint8_t i)
 	}
 }
 
-void sfxPlayNote(uint8_t pitch, uint8_t duration, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxPlayNote(uint8_t pitch, uint8_t duration, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -387,7 +387,7 @@ void sfxPlayNote(uint8_t pitch, uint8_t duration, uint8_t channel)
 	commandsCounter[channel] = 0;
 }
 
-void sfxStopNote(uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxStopNote(uint8_t channel)
 {
   if(channel >= NUM_CHANNELS)
     return;
@@ -405,14 +405,14 @@ void sfxStopNote(uint8_t channel)
   sfxUpdateOutput();
 }
 
-void sfxStopAllNotes(void)
+__attribute__ ((optimize("O2"))) void sfxStopAllNotes(void)
 {
   for(uint8_t channel = 0; channel < NUM_CHANNELS; channel++) {
     sfxStopNote(channel);
   }
 }
 
-void sfxUpdateNote(uint8_t i)
+__attribute__ ((optimize("O2"))) void sfxUpdateNote(uint8_t i)
 {
 	if(i >= NUM_CHANNELS)
 		return;
@@ -486,14 +486,14 @@ void sfxUpdateNote(uint8_t i)
 	}
 }
 
-void sfxUpdateAllNotes(void)
+__attribute__ ((optimize("O2"))) void sfxUpdateAllNotes(void)
 {
   for(uint8_t i = 0; i < NUM_CHANNELS; i++) {
     sfxUpdateNote(i);
   }
 }
 
-void sfxSetChannelHalfPeriod(uint8_t channel, uint8_t halfPeriod)
+__attribute__ ((optimize("O2"))) void sfxSetChannelHalfPeriod(uint8_t channel, uint8_t halfPeriod)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -505,7 +505,7 @@ void sfxSetChannelHalfPeriod(uint8_t channel, uint8_t halfPeriod)
 }
 
 // timer compare interrupt service routine
-ISR(TIMER1_COMPA_vect)
+__attribute__ ((optimize("O2"))) ISR(TIMER1_COMPA_vect)
 {
   bool outputChanged = false;
   //no for loop here, for the performance sake (this function runs 15 000 times per second...)
@@ -577,7 +577,7 @@ ISR(TIMER1_COMPA_vect)
   }
 }
 
-void sfxUpdateOutput(void)
+__attribute__ ((optimize("O2"))) void sfxUpdateOutput(void)
 {
   uint8_t output = 0;
   
@@ -610,34 +610,34 @@ void sfxUpdateOutput(void)
   OCR4D = output;
 }
 
-void sfxSetPatternLooping(bool loop, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxSetPatternLooping(bool loop, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
 	patternLooping[channel] = loop;
 }
 
-void sfxPlayOK(void)
+__attribute__ ((optimize("O2"))) void sfxPlayOK(void)
 {
 	sfxPlayPattern(playOKPattern, SFX_CH_0);
 }
 
-void sfxPlayCancel(void)
+__attribute__ ((optimize("O2"))) void sfxPlayCancel(void)
 {
 	sfxPlayPattern(playCancelPattern, SFX_CH_0);
 }
 
-void sfxPlayTick(void)
+__attribute__ ((optimize("O2"))) void sfxPlayTick(void)
 {
 	sfxPlayPattern(playTickP, SFX_CH_0);
 }
 
-void sfxSetVolume(int8_t volume)
+__attribute__ ((optimize("O2"))) void sfxSetVolume(int8_t volume)
 {
 	globalVolume = (volume < 0) ? volumeMax : volume % (volumeMax+1); //wrap volume value
 }
 
-void sfxSetVolumeCh(int8_t volume, uint8_t channel)
+__attribute__ ((optimize("O2"))) void sfxSetVolumeCh(int8_t volume, uint8_t channel)
 {
 	if(channel >= NUM_CHANNELS)
 		return;
@@ -647,12 +647,12 @@ void sfxSetVolumeCh(int8_t volume, uint8_t channel)
 	chanVolumes[channel] = volume;
 }
 
-uint8_t sfxGetGlobalVolume(void)
+__attribute__ ((optimize("O2"))) uint8_t sfxGetGlobalVolume(void)
 {
   return globalVolume;
 }
 
-uint8_t sfxGetVolumeCh(uint8_t channel)
+__attribute__ ((optimize("O2"))) uint8_t sfxGetVolumeCh(uint8_t channel)
 {
 	if(channel>=NUM_CHANNELS)
 		return 255;

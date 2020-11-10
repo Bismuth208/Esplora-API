@@ -83,7 +83,7 @@ uint8_t buf_unpacked[MAX_UNFOLD_SIZE<<1]; // /   minimum 2x more RAM
 static uint8_t alphaReplaceColorId = 0;
 //---------------------------------------------------------------------------//
 
-inline uint8_t findPackedMark(uint8_t *ptr)
+__attribute__ ((optimize("O2"))) inline uint8_t findPackedMark(uint8_t *ptr)
 {
   do {
     if(*ptr >= DICT_MARK) {
@@ -94,7 +94,7 @@ inline uint8_t findPackedMark(uint8_t *ptr)
   return 0;
 }
 
-inline void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
+__attribute__ ((optimize("O2"))) inline void printBuf_RLE(uint8_t *pData) // access to local register: less instructions
 {
   uint16_t repeatColor;
   uint8_t repeatTimes, tmpByte;
@@ -128,7 +128,7 @@ inline void printBuf_RLE(uint8_t *pData) // access to local register: less instr
 #endif
 }
 
-inline uint8_t *unpackBuf_DIC(const uint8_t *pDict)
+__attribute__ ((optimize("O2"))) inline uint8_t *unpackBuf_DIC(const uint8_t *pDict)
 {
   bool swap = false;
   bool dictMarker = true;
@@ -163,7 +163,7 @@ inline uint8_t *unpackBuf_DIC(const uint8_t *pDict)
 }
 
 // extended RLE, based on dictionary, a bit slower but better compression
-void drawPico_DIC_P(uint8_t x, uint8_t y, pic_t *pPic)
+__attribute__ ((optimize("O2"))) void drawPico_DIC_P(uint8_t x, uint8_t y, pic_t *pPic)
 {
   // asm volatile("cli"); // for debug purpose
   auto tmpData = getPicSize(pPic, 0);
@@ -204,7 +204,7 @@ void drawPico_DIC_P(uint8_t x, uint8_t y, pic_t *pPic)
 
 // =============================================================== //
 // old version, faster, but less comression
-void drawPico_RLE_P(uint8_t x, uint8_t y, pic_t *pPic)
+__attribute__ ((optimize("O2"))) void drawPico_RLE_P(uint8_t x, uint8_t y, pic_t *pPic)
 {
   uint16_t repeatColor;
   uint8_t tmpInd, repeatTimes;

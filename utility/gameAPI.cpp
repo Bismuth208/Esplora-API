@@ -66,7 +66,7 @@ uint16_t palette_RAM[PALETTE_SIZE>>1];
 static uint8_t alphaReplaceColorId = 0;
 
 //---------------------------------------------------------------------------//
-void drawText(uint8_t posX, uint8_t posY, uint8_t textSize, text_t *pText)
+__attribute__ ((optimize("O2"))) void drawText(uint8_t posX, uint8_t posY, uint8_t textSize, text_t *pText)
 {
   tftSetTextSize(textSize);
   tftSetTextColor(COLOR_WHITE);
@@ -75,7 +75,7 @@ void drawText(uint8_t posX, uint8_t posY, uint8_t textSize, text_t *pText)
 
 //---------------------------------------------------------------------------//
 
-void drawFrame(uint8_t posX, uint8_t posY, uint8_t w, uint8_t h, uint16_t clr1, uint16_t clr2)
+__attribute__ ((optimize("O2"))) void drawFrame(uint8_t posX, uint8_t posY, uint8_t w, uint8_t h, uint16_t clr1, uint16_t clr2)
 {
   tftFillRect(posX, posY, w, h, clr1);          // Frame 0
   tftDrawRect(posX+1, posY+1, w-2, h-2, clr2);  // Frame 1
@@ -84,7 +84,7 @@ void drawFrame(uint8_t posX, uint8_t posY, uint8_t w, uint8_t h, uint16_t clr1, 
 // --------------------------------------------------------------- //
 
 // hardware scrolling; blocks everything
-void screenSliderEffect(uint8_t colorId)
+__attribute__ ((optimize("O2"))) void screenSliderEffect(uint8_t colorId)
 {
   uint16_t color = palette_RAM[colorId];
 
@@ -94,7 +94,7 @@ void screenSliderEffect(uint8_t colorId)
   }
 }
 
-void removePicFast(position_t *pPos, pic_t *pPic)
+__attribute__ ((optimize("O2"))) void removePicFast(position_t *pPos, pic_t *pPic)
 {
   auto tmpData = getPicSize(pPic, 0);
 
@@ -120,13 +120,13 @@ void removePicFast(position_t *pPos, pic_t *pPic)
 #endif
 }
 
-void drawPixelFast(position_t *pPos, uint8_t colorId)
+__attribute__ ((optimize("O2"))) void drawPixelFast(position_t *pPos, uint8_t colorId)
 {
   tftSetAddrPixel(pPos->x, pPos->y);
   pushColorFast(palette_RAM[colorId]);
 }
 
-void printDutyDebug(uint32_t duration)
+__attribute__ ((optimize("O2"))) void printDutyDebug(uint32_t duration)
 {
   char buf[8];
 
@@ -137,7 +137,7 @@ void printDutyDebug(uint32_t duration)
 
 // --------------------------------------------------------------- //
 
-bool checkSpriteCollision(sprite_t *pSprOne, sprite_t *pSprTwo)
+__attribute__ ((optimize("O2"))) bool checkSpriteCollision(sprite_t *pSprOne, sprite_t *pSprTwo)
 {
   auto tmpDataOne = getPicSize(pSprOne->pPic, 0);
   auto tmpDataTwo = getPicSize(pSprTwo->pPic, 0);
@@ -174,13 +174,13 @@ bool checkSpriteCollision(sprite_t *pSprOne, sprite_t *pSprTwo)
   }
 }
 
-void updateSprite(sprite_t *pSprite)
+__attribute__ ((optimize("O2"))) void updateSprite(sprite_t *pSprite)
 {
   moveSprite(pSprite);
   drawSprite(pSprite);
 }
 
-void moveSprite(sprite_t *pSprite)
+__attribute__ ((optimize("O2"))) void moveSprite(sprite_t *pSprite)
 {
   //is position changed?
   if((pSprite->pos.Old.x != pSprite->pos.New.x) || (pSprite->pos.Old.y != pSprite->pos.New.y)) {
@@ -189,18 +189,18 @@ void moveSprite(sprite_t *pSprite)
   }
 }
 
-void drawSprite(sprite_t *pSprite)
+__attribute__ ((optimize("O2"))) void drawSprite(sprite_t *pSprite)
 {
   drawPico_DIC_P(pSprite->pos.Old.x, pSprite->pos.Old.y, pSprite->pPic);
 }
 
-void removeSprite(sprite_t *pSprite)
+__attribute__ ((optimize("O2"))) void removeSprite(sprite_t *pSprite)
 {
   removePicFast(&pSprite->pos.Old, pSprite->pPic);
 }
 
 //---------------------------------------------------------------------------//
-void getSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
+__attribute__ ((optimize("O2"))) void getSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
 {
   uint16_t blockEEAddr = blockNum * blockSize;
 
@@ -209,7 +209,7 @@ void getSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
   }
 }
 
-void setSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
+__attribute__ ((optimize("O2"))) void setSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
 {
   uint16_t blockEEAddr = blockNum * blockSize;
 
@@ -219,23 +219,23 @@ void setSaveData(uint8_t blockNum, void *blockPtr, size_t blockSize)
 }
 
 //---------------------------------------------------------------------------//
-void initPalette(void)
+__attribute__ ((optimize("O2"))) void initPalette(void)
 {
   // place palette in RAM for faster access
   memcpy_P(&palette_RAM[0], palette_ext, PALETTE_SIZE);
 }
 
-void setAlphaReplaceColorId(uint8_t colorId)
+__attribute__ ((optimize("O2"))) void setAlphaReplaceColorId(uint8_t colorId)
 {
   alphaReplaceColorId = colorId;
 }
 
-uint8_t getAlphaReplaceColorId(void)
+__attribute__ ((optimize("O2"))) uint8_t getAlphaReplaceColorId(void)
 {
   return alphaReplaceColorId;
 }
 
-uint16_t getPlatetteColor(uint8_t id)
+__attribute__ ((optimize("O2"))) uint16_t getPlatetteColor(uint8_t id)
 {
   return palette_RAM[id];
 }

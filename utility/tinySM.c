@@ -100,7 +100,7 @@ static tasksContainer_t *pxCurrentTasksStorage = NULL;
  * @param  None
  * @retval None
  */
-__attribute__ ((noreturn)) void vTSMRunTasks(void)
+__attribute__ ((noreturn, optimize("O2"))) void vTSMRunTasks(void)
 {
   PAA_NULL_CHECK();
 
@@ -180,7 +180,7 @@ RESET_TASKS_COUNT_LABEL:
  * @param  ucExec: need execute or not (aka reserve mem for future)
  * @retval None
  */
-void vTSMAddTask(pFunc_t pxTask, uint16_t usTimeToCheckTask, bool ucExec)
+__attribute__ ((optimize("O2"))) void vTSMAddTask(pFunc_t pxTask, uint16_t usTimeToCheckTask, bool ucExec)
 {
   PAA_NULL_CHECK();
   
@@ -240,7 +240,7 @@ void vTSMAddTask(pFunc_t pxTask, uint16_t usTimeToCheckTask, bool ucExec)
  * @param  ucExec: need execute or not (aka reserve mem for future)
  * @retval None
  */
-void vTSMAddTaskToArr(tasksContainer_t *pxTasksStorage, pFunc_t xTask,
+__attribute__ ((optimize("O2"))) void vTSMAddTaskToArr(tasksContainer_t *pxTasksStorage, pFunc_t xTask,
                                   uint16_t usTimeToCheckTask, bool ucExec)
 {
   // Add task by reallocate memory
@@ -300,7 +300,7 @@ void vTSMAddTaskToArr(tasksContainer_t *pxTasksStorage, pFunc_t xTask,
  * @param  pxTaskP: pointer to task stucture
  * @retval None
  */
-void vTSMAddTask_P(const taskParams_t *pxTaskP)
+__attribute__ ((optimize("O2"))) void vTSMAddTask_P(const taskParams_t *pxTaskP)
 {
   // This fuction is really dengerous as no any checks!
   // Use it if you over 9000% sure what you're doing!
@@ -323,7 +323,7 @@ void vTSMAddTask_P(const taskParams_t *pxTaskP)
  * @param  size: number of tasks to load
  * @retval None
  */
-void vTSMAddTasksArray_P(tasksArr_t *pxArr)
+__attribute__ ((optimize("O2"))) void vTSMAddTasksArray_P(tasksArr_t *pxArr)
 {
   vTSMDeleteAllTasks();
 
@@ -341,7 +341,7 @@ void vTSMAddTasksArray_P(tasksArr_t *pxArr)
  * @param  none
  * @retval None
  */
-void vTSMDeleteAllTasks(void)
+__attribute__ ((optimize("O2"))) void vTSMDeleteAllTasks(void)
 {
   PAA_NULL_CHECK();
 
@@ -364,7 +364,7 @@ void vTSMDeleteAllTasks(void)
  * @param  xTask: pointer to task what to remove
  * @retval None
  */
-void vTSMDeleteTask(pFunc_t xTask)
+__attribute__ ((optimize("O2"))) void vTSMDeleteTask(pFunc_t xTask)
 {
   PAA_NULL_CHECK();
 
@@ -385,7 +385,7 @@ void vTSMDeleteTask(pFunc_t xTask)
  * @retval None
  */
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-void vTSMDisableTask(pFunc_t xTask)
+__attribute__ ((optimize("O2"))) void vTSMDisableTask(pFunc_t xTask)
 {
   PAA_NULL_CHECK();
 
@@ -400,7 +400,7 @@ void vTSMDisableTask(pFunc_t xTask)
  * @retval None
  */
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-void vTSMEnableTask(pFunc_t xTask)
+__attribute__ ((optimize("O2"))) void vTSMEnableTask(pFunc_t xTask)
 {
   PAA_NULL_CHECK();
 
@@ -415,7 +415,7 @@ void vTSMEnableTask(pFunc_t xTask)
  * @retval None
  */
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-void vTSMDisableAllTasks(void)
+__attribute__ ((optimize("O2"))) void vTSMDisableAllTasks(void)
 {
   PAA_NULL_CHECK();
 
@@ -431,7 +431,7 @@ void vTSMDisableAllTasks(void)
  * @retval None
  */
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-void vTSMEnableAllTasks(void)
+__attribute__ ((optimize("O2"))) void vTSMEnableAllTasks(void)
 {
   PAA_NULL_CHECK();
 
@@ -448,7 +448,7 @@ void vTSMEnableAllTasks(void)
  * @retval None
  */
 #if TSM_CONFIG_USE_EXECUTE_FLAG
-void vTSMUpdateTaskStatus(pFunc_t xTask, bool ucExec)
+__attribute__ ((optimize("O2"))) void vTSMUpdateTaskStatus(pFunc_t xTask, bool ucExec)
 {
   PAA_NULL_CHECK();
 
@@ -463,7 +463,7 @@ void vTSMUpdateTaskStatus(pFunc_t xTask, bool ucExec)
  * @param  usTimeToCheckTask: new period
  * @retval None
  */
-void vTSMUpdateTaskTimeCheck(pFunc_t xTask, uint16_t usTimeToCheckTask)
+__attribute__ ((optimize("O2"))) void vTSMUpdateTaskTimeCheck(pFunc_t xTask, uint16_t usTimeToCheckTask)
 {
   PAA_NULL_CHECK();
 
@@ -481,7 +481,7 @@ void vTSMUpdateTaskTimeCheck(pFunc_t xTask, uint16_t usTimeToCheckTask)
  * @param  ucExec: new flag state
  * @retval None
  */
-void vTSMReplaceTask(pFunc_t xOldTask, pFunc_t xNewTask, uint16_t usTimeToCheckTask, bool ucExec)
+__attribute__ ((optimize("O2"))) void vTSMReplaceTask(pFunc_t xOldTask, pFunc_t xNewTask, uint16_t usTimeToCheckTask, bool ucExec)
 {
   PAA_NULL_CHECK();
 
@@ -506,7 +506,7 @@ void vTSMReplaceTask(pFunc_t xOldTask, pFunc_t xNewTask, uint16_t usTimeToCheckT
  * @param  none
  * @retval None
  */
-void vTSMDefragTasksMemory(void)
+__attribute__ ((optimize("O2"))) void vTSMDefragTasksMemory(void)
 {
   PAA_NULL_CHECK();
 
@@ -573,7 +573,7 @@ void vTSMDefragTasksMemory(void)
  * @warning  still work unstable!
  * @retval None
  */
-void vTSMrmSameTasks(void)
+__attribute__ ((optimize("O2"))) void vTSMrmSameTasks(void)
 {
   PAA_NULL_CHECK();
 
@@ -610,7 +610,7 @@ void vTSMrmSameTasks(void)
  * @param  xTask: pointer to task function
  * @retval number id in tasks array
  */
-uint8_t ucTSMSearchTask(pFunc_t xTask)
+__attribute__ ((optimize("O2"))) uint8_t ucTSMSearchTask(pFunc_t xTask)
 {
   PAA_NULL_CHECK();
 
@@ -657,7 +657,7 @@ uint8_t ucTSMSearchTask(pFunc_t xTask)
  * @retval none
  */
 #if TSM_CONFIG_ENABLE_DEPRECATED_FEATURES
-void vTSMInitTasksStorage(tasksContainer_t *pxNewTasksStorage, taskFunc_t *pxTasksArr, uint8_t ucMaximumTasks)
+__attribute__ ((optimize("O2"))) void vTSMInitTasksStorage(tasksContainer_t *pxNewTasksStorage, taskFunc_t *pxTasksArr, uint8_t ucMaximumTasks)
 {
   pxCurrentTasksStorage = pxNewTasksStorage;
   PAA = pxTasksArr;
@@ -673,7 +673,7 @@ void vTSMInitTasksStorage(tasksContainer_t *pxNewTasksStorage, taskFunc_t *pxTas
  * @param  pxNewTasksStorage: pointer to current task states
  * @retval pointer to previous task states scturct
  */
-tasksContainer_t *pxTSMSetTasksStorage(tasksContainer_t *pxNewTasksStorage)
+__attribute__ ((optimize("O2"))) tasksContainer_t *pxTSMSetTasksStorage(tasksContainer_t *pxNewTasksStorage)
 {
   tasksContainer_t *pxOldTasksStorage = pxCurrentTasksStorage; // make a copy
   pxCurrentTasksStorage = pxNewTasksStorage; // replace pointers
@@ -687,14 +687,14 @@ tasksContainer_t *pxTSMSetTasksStorage(tasksContainer_t *pxNewTasksStorage)
  * @param  none
  * @retval pointer to current task states
  */
-tasksContainer_t *pxTSMGetTasksStorage(void)
+__attribute__ ((optimize("O2"))) tasksContainer_t *pxTSMGetTasksStorage(void)
 {
   return pxCurrentTasksStorage;
 }
 
 #if !TSM_CONFIG_USE_DYNAMIC_MEM
 // Use only when TSM_CONFIG_USE_DYNAMIC_MEM is 0
-void vTSMSetMaxTasks(uint8_t ucMaximumTasks)
+__attribute__ ((optimize("O2"))) void vTSMSetMaxTasks(uint8_t ucMaximumTasks)
 {
   ucMaxTasks = ucMaximumTasks;
   ucResetTaskCount = true;
@@ -707,7 +707,7 @@ void vTSMSetMaxTasks(uint8_t ucMaximumTasks)
  * @param  ucErrorCode: code whith reason where and why panic happened
  * @retval none
  */
-__attribute__ ((noreturn)) void vTSMPanic(uint8_t ucErrorCode)
+__attribute__ ((noreturn, optimize("O2"))) void vTSMPanic(uint8_t ucErrorCode)
 {
   (void)ucErrorCode;
   
@@ -737,7 +737,7 @@ __attribute__ ((noreturn)) void vTSMPanic(uint8_t ucErrorCode)
  * @param  none
  * @retval number of tasks stored in current task array
  */
-uint8_t ucTSMAvalibleTasks(void)
+__attribute__ ((optimize("O2"))) uint8_t ucTSMAvalibleTasks(void)
 {
   return PAC;
 }
@@ -747,7 +747,7 @@ uint8_t ucTSMAvalibleTasks(void)
  * @param  none
  * @retval number of free bytes in RAM
  */
-uint16_t usTSMAvalibleRam(void) // space between the heap and the stack
+__attribute__ ((optimize("O2"))) uint16_t usTSMAvalibleRam(void) // space between the heap and the stack
 {
 #ifdef __AVR__
   // GCC unicorn magic...
@@ -760,7 +760,7 @@ uint16_t usTSMAvalibleRam(void) // space between the heap and the stack
 }
 
 #if TSM_CONFIG_USE_IDLE_FUNC
-void vTSMSetIdleFunc(pFunc_t xTask)
+__attribute__ ((optimize("O2"))) void vTSMSetIdleFunc(pFunc_t xTask)
 {
   xFuncIDLE = xTask;
 }
@@ -773,7 +773,7 @@ void vTSMSetIdleFunc(pFunc_t xTask)
  * @warning  this is for debug only! and reque graphycs screen!
  * @retval none
  */
-void vTSMPrintTasksMem(uint16_t offset)
+__attribute__ ((optimize("O2"))) void vTSMPrintTasksMem(uint16_t offset)
 {
   char buf[10];
   char adrBuf[5];
@@ -803,7 +803,7 @@ void vTSMPrintTasksMem(uint16_t offset)
  * @param  fDrawFastVLine: draw vertical line
  * @retval none
  */
-void vTSMSetGfxFunc(fPrint_t fPrint, fFillRect_t fFillRect, fSetCursor_t fSetCursor,
+__attribute__ ((optimize("O2"))) void vTSMSetGfxFunc(fPrint_t fPrint, fFillRect_t fFillRect, fSetCursor_t fSetCursor,
                                                 fDrawFastVLine_t fDrawFastVLine)
 {
   fpPrint = fPrint;

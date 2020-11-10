@@ -2,7 +2,7 @@
 
 #include "adc.h"
 
-void setPrescallerADC(uint8_t ps)
+__attribute__ ((optimize("O2"))) void setPrescallerADC(uint8_t ps)
 {
   ADCSRA &= ~(1 << ADEN);
   
@@ -40,7 +40,7 @@ void setPrescallerADC(uint8_t ps)
   ADCSRA |= (1 << ADEN);
 }
 
-void setChannelADC(uint8_t chADC)
+__attribute__ ((optimize("O2"))) void setChannelADC(uint8_t chADC)
 {
   // Select ADC Channel ch must be 0-13
   ADMUX |= (chADC & ADC_CH_MASK);
@@ -54,7 +54,7 @@ void setChannelADC(uint8_t chADC)
 #endif
 }
 
-void initADC(void)
+__attribute__ ((optimize("O2"))) void initADC(void)
 {
   // set the analog reference (high two bits of ADMUX) and select the
   // channel (low 4 bits).  this also sets ADLAR (left-adjust result)
@@ -70,7 +70,7 @@ void initADC(void)
   DIDR1 |= (1<<AIN1D) | (1<<AIN0D);
 }
 
-uint16_t readADC(void)
+__attribute__ ((optimize("O2"))) uint16_t readADC(void)
 {
   //Start Single conversion
   ADCSRA |= (1<<ADSC);

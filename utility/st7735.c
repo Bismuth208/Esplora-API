@@ -51,21 +51,21 @@ int16_t _height = ST7735_TFTWIDTH;
 
 //-------------------------------------------------------------------------------------------//
 
-void writeCommand(uint8_t c)
+__attribute__ ((optimize("O2"))) void writeCommand(uint8_t c)
 {
   ENABLE_CMD();
   sendData8_SPI1(c);
   RELEASE_TFT();
 }
 
-void writeData(uint8_t c)
+__attribute__ ((optimize("O2"))) void writeData(uint8_t c)
 {
   ENABLE_DATA();
   sendData8_SPI1(c);
   RELEASE_TFT();
 }
 
-void writeWordData(uint16_t c)
+__attribute__ ((optimize("O2"))) void writeWordData(uint16_t c)
 {
   ENABLE_DATA();
   sendData16_SPI1(c);
@@ -74,7 +74,7 @@ void writeWordData(uint16_t c)
 
 // Companion code to the above tables.  Reads and issues
 // a series of LCD commands stored in PROGMEM byte array.
-void commandList(const uint8_t *addr)
+__attribute__ ((optimize("O2"))) void commandList(const uint8_t *addr)
 {  
   uint8_t  numCommands, numArgs;
   uint16_t ms;
@@ -97,7 +97,7 @@ void commandList(const uint8_t *addr)
   }
 }
 
-void initTFT_GPIO(void)
+__attribute__ ((optimize("O2"))) void initTFT_GPIO(void)
 {
   SET_BIT(TFT_DDRX_CS, TFT_CS_PIN);
   SET_BIT(TFT_DDRX_DC, TFT_DC_PIN);
@@ -105,7 +105,7 @@ void initTFT_GPIO(void)
 }
 
 // Initialization code common to both 'B' and 'R' type displays
-void commonInit(const uint8_t *cmdList)
+__attribute__ ((optimize("O2"))) void commonInit(const uint8_t *cmdList)
 {
   colstart  = rowstart = 0; // May be overridden in init func  
   
@@ -128,12 +128,13 @@ void commonInit(const uint8_t *cmdList)
 }
 
 // Initialization for ST7735B screens
-void initB(void) {
+__attribute__ ((optimize("O2"))) void initB(void)
+{
   commonInit(Bcmd);
 }
 
 // Initialization for ST7735R screens (green or red tabs)
-void initR(uint8_t options)
+__attribute__ ((optimize("O2"))) void initR(uint8_t options)
 {
   commonInit(Rcmd1);
   if(options == INITR_GREENTAB) {
@@ -160,19 +161,19 @@ void initR(uint8_t options)
   tabcolor = options;
 }
 
-void initRBlack(void)
+__attribute__ ((optimize("O2"))) void initRBlack(void)
 {
   commonInit(RcmdBlack);
   tabcolor = INITR_BLACKTAB;
 }
 
-void initG(void)
+__attribute__ ((optimize("O2"))) void initG(void)
 {
   commonInit(Gcmd);
 }
 
 // blow your mind
-void tftSetAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
+__attribute__ ((optimize("O2"))) void tftSetAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
   ENABLE_CMD();             // grab TFT CS and writecommand:
   sendData8_SPI1(ST7735_CASET); // Column addr set
@@ -194,7 +195,7 @@ void tftSetAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
   //SET_TFT_CS_HI; // disable in other func
 }
 
-void tftSetVAddrWindow(uint8_t x0, uint8_t y0, uint8_t y1)
+__attribute__ ((optimize("O2"))) void tftSetVAddrWindow(uint8_t x0, uint8_t y0, uint8_t y1)
 {
   ENABLE_CMD();             // grab TFT CS and writecommand:
   sendData8_SPI1(ST7735_CASET); // Column addr set
@@ -216,7 +217,7 @@ void tftSetVAddrWindow(uint8_t x0, uint8_t y0, uint8_t y1)
   //SET_TFT_CS_HI; // disable in other func
 }
 
-void tftSetHAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1)
+__attribute__ ((optimize("O2"))) void tftSetHAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1)
 {
   ENABLE_CMD();             // grab TFT CS and writecommand:
   sendData8_SPI1(ST7735_CASET); // Column addr set
@@ -238,7 +239,7 @@ void tftSetHAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1)
   //SET_TFT_CS_HI; // disable in other func
 }
 
-void tftSetAddrPixel(uint8_t x0, uint8_t y0)
+__attribute__ ((optimize("O2"))) void tftSetAddrPixel(uint8_t x0, uint8_t y0)
 {
   ENABLE_CMD();             // grab TFT CS and writecommand:
   sendData8_SPI1(ST7735_CASET); // Column addr set
@@ -260,7 +261,7 @@ void tftSetAddrPixel(uint8_t x0, uint8_t y0)
   //SET_TFT_CS_HI; // disable in other func
 }
 
-void tftSetRotation(uint8_t m)
+__attribute__ ((optimize("O2"))) void tftSetRotation(uint8_t m)
 {
   writeCommand(ST7735_MADCTL);
   uint8_t rotation = m % 4; // can't be higher than 3
@@ -324,14 +325,14 @@ void tftSetRotation(uint8_t m)
 }
 
 // how much to scroll
-void tftScrollAddress(uint8_t VSP)
+__attribute__ ((optimize("O2"))) void tftScrollAddress(uint8_t VSP)
 {
   writeCommand(ST7735_VSCRSADD); // Vertical scrolling start address
   writeWordData(VSP);
 }
 
 // set scrollong zone
-void tftSetScrollArea(uint8_t TFA, uint8_t BFA)
+__attribute__ ((optimize("O2"))) void tftSetScrollArea(uint8_t TFA, uint8_t BFA)
 {
   writeCommand(ST7735_VSCRDEF); // Vertical scroll definition
   writeWordData(TFA);
@@ -339,7 +340,7 @@ void tftSetScrollArea(uint8_t TFA, uint8_t BFA)
   writeWordData(BFA);
 }
 
-void tftScroll(uint8_t lines, uint8_t yStart)
+__attribute__ ((optimize("O2"))) void tftScroll(uint8_t lines, uint8_t yStart)
 {
   for(uint8_t i = 0; i < lines; i++) {
     if ((yStart++) == (_height - TFT_BOT_FIXED_AREA)) yStart = TFT_TOP_FIXED_AREA;
@@ -347,7 +348,7 @@ void tftScroll(uint8_t lines, uint8_t yStart)
   }
 }
 
-void tftScrollSmooth(uint8_t lines, uint8_t yStart, uint8_t wait)
+__attribute__ ((optimize("O2"))) void tftScrollSmooth(uint8_t lines, uint8_t yStart, uint8_t wait)
 {
   for(uint8_t i = 0; i < lines; i++) {
     if((yStart++) == (_height - TFT_BOT_FIXED_AREA)) yStart = TFT_TOP_FIXED_AREA;
@@ -356,7 +357,7 @@ void tftScrollSmooth(uint8_t lines, uint8_t yStart, uint8_t wait)
   }
 }
 
-void tftSetSleep(bool enable)
+__attribute__ ((optimize("O2"))) void tftSetSleep(bool enable)
 {
   if (enable) {
     writeCommand(ST7735_SLPIN);
@@ -368,7 +369,7 @@ void tftSetSleep(bool enable)
   }
 }
 
-void tftSetIdleMode(bool mode)
+__attribute__ ((optimize("O2"))) void tftSetIdleMode(bool mode)
 {
   if (mode) {
     writeCommand(ST7735_IDLEON);
@@ -377,13 +378,13 @@ void tftSetIdleMode(bool mode)
   }
 }
 
-void tftSetDispBrightness(uint8_t brightness)
+__attribute__ ((optimize("O2"))) void tftSetDispBrightness(uint8_t brightness)
 {
   //writeCommand(ST7735_WRDBR);
   writeWordData(brightness);
 }
 
-void tftSetInvertion(bool i)
+__attribute__ ((optimize("O2"))) void tftSetInvertion(bool i)
 {
   writeCommand(i ? ST7735_INVON : ST7735_INVOFF);
 }

@@ -65,7 +65,7 @@
 btnStatus_t btnStates;
 // ------------------------------------ //
 
-void initMuxIO(void)
+__attribute__ ((optimize("O2"))) void initMuxIO(void)
 {
   // setup multiplexor IO control as output
   MUX_DDRX  |= ((1<<MUXD_PIN) | (1<<MUXC_PIN) | (1<<MUXB_PIN) | (1<<MUXA_PIN));
@@ -75,7 +75,7 @@ void initMuxIO(void)
   MUX_PORTX |= (1<<MUX_READ_PIN);
 }
 
-void initLEDIO(void)
+__attribute__ ((optimize("O2"))) void initLEDIO(void)
 {
   // set as output
   LED_DDRX_BG |= (1<<LED_PIN_B) | (1<<LED_PIN_G);
@@ -85,7 +85,7 @@ void initLEDIO(void)
   LED_PORTX_BG  &= ~((1<<LED_PIN_B) | (1<<LED_PIN_G));
 }
 
-void initAccelerometerIO(void)
+__attribute__ ((optimize("O2"))) void initAccelerometerIO(void)
 {
   // set as input
   ACC_DDRX_X  &= ~(1<<ACC_PIN_X);
@@ -96,7 +96,7 @@ void initAccelerometerIO(void)
   ACC_DDRX_YZ |= ((1<<ACC_PIN_Y) | (1<<ACC_PIN_Z));
 }
 
-void initEsplora(void)
+__attribute__ ((optimize("O2"))) void initEsplora(void)
 {
   // disable USB for 32u4
   USBCON = 0;
@@ -119,7 +119,7 @@ void initEsplora(void)
   setChannelADC(ANALOG_MUX_CH);
 }
 
-void initRand(void)
+__attribute__ ((optimize("O2"))) void initRand(void)
 {
   // yes, it real "random"!
   seedRndNum(readMic());
@@ -127,7 +127,7 @@ void initRand(void)
   seedRndNum(readLight());
 }
 
-void initEsploraGame(void)
+__attribute__ ((optimize("O2"))) void initEsploraGame(void)
 {
   initRand();
 #if ADD_SOUND
@@ -137,7 +137,7 @@ void initEsploraGame(void)
 }
 
 // ------------------------------------ //
-void setLEDValue(uint8_t pin, uint8_t state)
+__attribute__ ((optimize("O2"))) void setLEDValue(uint8_t pin, uint8_t state)
 {
   volatile uint8_t *pPort;
   volatile uint8_t pPin;
@@ -168,8 +168,7 @@ void setLEDValue(uint8_t pin, uint8_t state)
 }
 
 // ------------------------------------ //
-
-uint16_t readAccelerometr(uint8_t axy)
+__attribute__ ((optimize("O2"))) uint16_t readAccelerometr(uint8_t axy)
 {
   setChannelADC(axy);
   uint16_t val = readADC();
@@ -179,14 +178,14 @@ uint16_t readAccelerometr(uint8_t axy)
 }
 
 // ---------- MUX --------- //
-uint16_t getAnalogMux(uint8_t chMux)
+__attribute__ ((optimize("O2"))) uint16_t getAnalogMux(uint8_t chMux)
 {
   MUX_PORTX = ((MUX_PORTX & 0x0F) | ((chMux<<4)&0xF0));
   
   return readADC();
 }
 
-bool readSwitchButton(uint8_t btn)
+__attribute__ ((optimize("O2"))) bool readSwitchButton(uint8_t btn)
 {
   bool state = true;
   if(getAnalogMux(btn) > SW_BTN_MIN_LVL) { // state low == pressed
@@ -195,34 +194,34 @@ bool readSwitchButton(uint8_t btn)
   return state;
 }
 
-uint16_t readJoystic(uint8_t btn)
+__attribute__ ((optimize("O2"))) uint16_t readJoystic(uint8_t btn)
 {
   return getAnalogMux(btn);
 }
 
-uint16_t readMic(void)
+__attribute__ ((optimize("O2"))) uint16_t readMic(void)
 {
   return getAnalogMux(MIC_MUX_VAL);
 }
 
-uint16_t readLight(void)
+__attribute__ ((optimize("O2"))) uint16_t readLight(void)
 {
   return getAnalogMux(LIGHT_MUX_VAL);
 }
 
-uint16_t readTemp(void)
+__attribute__ ((optimize("O2"))) uint16_t readTemp(void)
 {
   return getAnalogMux(TEMP_MUX_VAL);
 }
 
-uint16_t readLinear(void)
+__attribute__ ((optimize("O2"))) uint16_t readLinear(void)
 {
   return getAnalogMux(LINEAR_MUX_VAL);
 }
 
 // ------------------------------------ //
 // poll periodically buttons states
-void updateBtnStates(void)
+__attribute__ ((optimize("O2"))) void updateBtnStates(void)
 {
   if(buttonIsPressed(BUTTON_A))
     btnStates.aBtn = true;
@@ -234,7 +233,7 @@ void updateBtnStates(void)
     btnStates.yBtn = true;
 }
 
-bool getBtnState(uint8_t btn)
+__attribute__ ((optimize("O2"))) bool getBtnState(uint8_t btn)
 {
   bool state = false;
 
@@ -260,12 +259,12 @@ bool getBtnState(uint8_t btn)
   return state;
 }
 
-void resetBtnStates(void)
+__attribute__ ((optimize("O2"))) void resetBtnStates(void)
 {
   btnStates.zBtn = 0;
 }
 
-uint8_t getJoyStickValue(uint8_t pin)
+__attribute__ ((optimize("O2"))) uint8_t getJoyStickValue(uint8_t pin)
 {
   uint16_t newValuePin = readJoystic(pin);
 
@@ -276,7 +275,7 @@ uint8_t getJoyStickValue(uint8_t pin)
 
 // ------------------------------------ //
 // This fuction must to be called 1/20s or every 50ms !
-void playMusic(void)
+__attribute__ ((optimize("O2"))) void playMusic(void)
 {
 #if ADD_SOUND
   sfxUpdateAll(); // update sound each frame, as sound engine is frame based
@@ -284,7 +283,7 @@ void playMusic(void)
 }
 
 // ------------------------------------ //
-void setMainFreq(uint8_t ps)
+__attribute__ ((optimize("O2"))) void setMainFreq(uint8_t ps)
 {
   // This function set prescaller,
   // which change main F_CPU freq

@@ -3,7 +3,7 @@
 uint8_t rndNum =1;
 uint8_t rndNumA =0;
 
-uint8_t fastRandNum(void)
+__attribute__ ((optimize("O2"))) uint8_t fastRandNum(void)
 {
   rndNum ^= (rndNum << 3);
   rndNum ^= (rndNum >> 5);
@@ -11,19 +11,24 @@ uint8_t fastRandNum(void)
   return rndNum;
 }
 
-void seedRndNum(uint16_t seed)
+__attribute__ ((optimize("O2"))) void seedRndNum(uint16_t seed)
 {
   rndNum += seed>>8;
   rndNum += seed & 0x00FF;
 }
 
-int32_t mapVal(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max)
+__attribute__ ((optimize("O2"))) void resetRndNum(uint16_t usVal)
+{
+  rndNum = usVal;
+}
+
+__attribute__ ((optimize("O2"))) int32_t mapVal(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 // fast and low cost memset
-void memset_F(void *pvDest, uint8_t src, size_t size)
+__attribute__ ((optimize("O2"))) void memset_F(void *pvDest, uint8_t src, size_t size)
 {
   uint8_t *dest = (uint8_t*)pvDest;
   do {
@@ -31,7 +36,7 @@ void memset_F(void *pvDest, uint8_t src, size_t size)
   } while(--size);
 }
 
-void memcpy_F(void *pDest, void *pSrc, size_t size)
+__attribute__ ((optimize("O2"))) void memcpy_F(void *pDest, void *pSrc, size_t size)
 {
   uint8_t *puDest = (uint8_t*)pDest;
   uint8_t *puSrc = (uint8_t*)pSrc;

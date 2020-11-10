@@ -80,7 +80,7 @@ static bool _cp437 = false; // If set, use correct CP437 charset (default is off
 static uint8_t *pFont = font; //arcade8bit8x8; 
 //-------------------------------------------------------------------------------------------//
 
-void tftDrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
 {
   int16_t x = -r, y = 0, err = 2-2*r, e2;
   
@@ -99,13 +99,13 @@ void tftDrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
   } while (x <= 0);
 }
 
-void tftFillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftFillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
 {
   tftDrawFastVLine(x0, y0-r, 2*r+1, color);
   tftFillCircleHelper(x0, y0, r, 3, 0, color);
 }
 
-void tftDrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color)
 {
   int16_t f     = 1 - r;
   int16_t ddF_x = 1;
@@ -142,7 +142,7 @@ void tftDrawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername,
 }
 
 // Used to do circles and roundrects
-void tftFillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftFillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color)
 {
   int16_t f     = 1 - r;
   int16_t ddF_x = 1;
@@ -231,7 +231,7 @@ void tftDrawLine(int16_t x, int16_t y, int16_t x2, int16_t y2, uint16_t clr)
 
 #else
 // Bresenham's algorithm
-void tftDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 {
   if (y0 == y1) {
     if (x1 > x0) {
@@ -318,7 +318,7 @@ void tftDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 #endif
 
 // Draw a rectangle
-void tftDrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
   tftDrawFastHLine(x, y, w, color);
   tftDrawFastHLine(x, y+h-1, w, color);
@@ -327,7 +327,7 @@ void tftDrawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 }
 
 // Draw a rounded rectangle
-void tftDrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
 {
   // smarter version
   tftDrawFastHLine(x+r  , y    , w-2*r, color); // Top
@@ -342,7 +342,7 @@ void tftDrawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uin
 }
 
 // Fill a rounded rectangle
-void tftFillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftFillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
 {
   // smarter version
   tftFillRect(x+r, y, w-2*r, h, color);
@@ -353,7 +353,7 @@ void tftFillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uin
 }
 
 // Draw a triangle
-void tftDrawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
 {
   tftDrawLine(x0, y0, x1, y1, color);
   tftDrawLine(x1, y1, x2, y2, color);
@@ -361,7 +361,7 @@ void tftDrawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2,
 }
 
 // Fill a triangle
-void tftFillTriangle ( int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftFillTriangle( int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
 {
   int16_t a, b, y, last;
   
@@ -437,7 +437,7 @@ void tftFillTriangle ( int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x
   }
 }
 
-void tftDrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
 {
   int16_t i, j, byteWidth = (w + 7) >> 3; // >> 3 same as / 8
   
@@ -453,7 +453,7 @@ void tftDrawBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16
 // Draw a 1-bit color bitmap at the specified x, y position from the
 // provided bitmap buffer (must be PROGMEM memory) using color as the
 // foreground color and bg as the background color.
-void tftDrawBitmapBG(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color, uint16_t bg)
+__attribute__ ((optimize("O2"))) void tftDrawBitmapBG(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color, uint16_t bg)
 {
   int16_t i, j, byteWidth = (w + 7) >> 3; // >> 3 same as / 8
   
@@ -471,7 +471,7 @@ void tftDrawBitmapBG(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int
 //Draw XBitMap Files (*.xbm), exported from GIMP,
 //Usage: Export from GIMP to *.xbm, rename *.xbm to *.c and open in editor.
 //C Array can be directly used with this function
-void tftDrawXBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawXBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int16_t h, uint16_t color)
 {
   int16_t i, j, byteWidth = (w + 7) >> 3; // >> 3 same as / 8
   
@@ -485,14 +485,14 @@ void tftDrawXBitmap(int16_t x, int16_t y, const uint8_t *bitmap, int16_t w, int1
 }
 
 //=================================== Print section ========================//
-void tftPrint(const char *str)
+__attribute__ ((optimize("O2"))) void tftPrint(const char *str)
 {
   while(*str != '\0') {
     tftPrintChar(*str++);
   }
 }
 
-void tftPrint_P(const char *str)
+__attribute__ ((optimize("O2"))) void tftPrint_P(const char *str)
 {
   uint8_t tmpChar;
   while((tmpChar=pgm_read_byte(str++)) != '\0') {
@@ -500,25 +500,25 @@ void tftPrint_P(const char *str)
   }
 }
 
-void tftPrintAt(int16_t x, int16_t y, const char *str)
+__attribute__ ((optimize("O2"))) void tftPrintAt(int16_t x, int16_t y, const char *str)
 {
   tftSetCursor(x, y);
   tftPrint(str);
 }
 
-void tftPrintAt_P(int16_t x, int16_t y, const char *str)
+__attribute__ ((optimize("O2"))) void tftPrintAt_P(int16_t x, int16_t y, const char *str)
 {
   tftSetCursor(x, y);
   tftPrint_P(str);
 }
 
-void tftPrintCharAt(int16_t x, int16_t y, uint8_t c)
+__attribute__ ((optimize("O2"))) void tftPrintCharAt(int16_t x, int16_t y, uint8_t c)
 {
   tftSetCursor(x, y);
   tftPrintChar(c);
 }
 
-void tftCheckWrapX(void)
+__attribute__ ((optimize("O2"))) void tftCheckWrapX(void)
 {
   if (wrap && (cursor_x > (_width - textsize*6))) {
     cursor_y += textsize*8;
@@ -526,7 +526,7 @@ void tftCheckWrapX(void)
   }
 }
 
-void tftCheckWrapY(void)
+__attribute__ ((optimize("O2"))) void tftCheckWrapY(void)
 {
   if (wrap && (cursor_y > (_height - textsize*8))) {
     cursor_y = 0;
@@ -534,7 +534,7 @@ void tftCheckWrapY(void)
   }
 }
 
-void tftPrintChar(uint8_t c)
+__attribute__ ((optimize("O2"))) void tftPrintChar(uint8_t c)
 {
   switch(c) {
     case '\n': { // 'LINE FEED'
@@ -576,7 +576,7 @@ void tftPrintChar(uint8_t c)
 }
 
 // use glabal vars for: textsize, textcolor, textbgcolor
-void tftDrawCharInt(int16_t x, int16_t y, uint8_t c)
+__attribute__ ((optimize("O2"))) void tftDrawCharInt(int16_t x, int16_t y, uint8_t c)
 {
 #if USE_BOUNDS_CHECK
   if((x >= _width)            || // Clip right
@@ -623,7 +623,7 @@ void tftDrawCharInt(int16_t x, int16_t y, uint8_t c)
   }
 }
 
-void tftDrawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, uint8_t size)
+__attribute__ ((optimize("O2"))) void tftDrawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, uint8_t size)
 {
 #if USE_BOUNDS_CHECK
   if((x >= _width)            || // Clip right
@@ -670,12 +670,12 @@ void tftDrawChar(int16_t x, int16_t y, uint8_t c, uint16_t color, uint16_t bg, u
   }
 }
 
-uint16_t tftColumns()
+__attribute__ ((optimize("O2"))) uint16_t tftColumns(void)
 {
   return (tftWidth() / (textsize*6));
 }
 
-uint16_t tftRows()
+__attribute__ ((optimize("O2"))) uint16_t tftRows(void)
 {
   return (tftHeight() / (textsize*8));
 }
@@ -685,41 +685,41 @@ void tftSetFont(unsigned char* f)
 font = f;
 }
 */
-void tftSetCursor(int16_t x, int16_t y)
+__attribute__ ((optimize("O2"))) void tftSetCursor(int16_t x, int16_t y)
 {
   cursor_x = x;
   cursor_y = y;
 }
 
-int16_t tftGetCursorX(void)
+__attribute__ ((optimize("O2"))) int16_t tftGetCursorX(void)
 {
   return cursor_x;
 }
 
-int16_t tftGetCursorY(void)
+__attribute__ ((optimize("O2"))) int16_t tftGetCursorY(void)
 {
   return cursor_y;
 }
 
-void tftSetTextSize(int8_t s)
+__attribute__ ((optimize("O2"))) void tftSetTextSize(int8_t s)
 {
   textsize = (s > 0) ? s : 1;
 }
 
-void tftSetTextColor(uint16_t c)
+__attribute__ ((optimize("O2"))) void tftSetTextColor(uint16_t c)
 {
   // For 'transparent' background, we'll set the bg 
   // to the same as fg instead of using a flag
   textcolor = textbgcolor = c;
 }
 
-void tftSetTextColorBG(uint16_t c, uint16_t b)
+__attribute__ ((optimize("O2"))) void tftSetTextColorBG(uint16_t c, uint16_t b)
 {
   textcolor   = c;
   textbgcolor = b; 
 }
 
-void tftSetTextWrap(bool w)
+__attribute__ ((optimize("O2"))) void tftSetTextWrap(bool w)
 {
   wrap = w;
 }
@@ -732,30 +732,30 @@ void tftSetTextWrap(bool w)
 // with the erroneous character indices.  By default, the library uses the
 // original 'wrong' behavior and old sketches will still work.  Pass 'true'
 // to this function to use correct CP437 character values in your code.
-void tftSetCP437(bool x)
+__attribute__ ((optimize("O2"))) void tftSetCP437(bool x)
 {
   _cp437 = x;
 }
 
 // Return the size of the display (per current rotation)
-int16_t tftWidth(void)
+__attribute__ ((optimize("O2"))) int16_t tftWidth(void)
 {
   return _width;
 }
 
-int16_t tftHeight(void)
+__attribute__ ((optimize("O2"))) int16_t tftHeight(void)
 {
   return _height;
 }
 
 /***************************************************************************/
 
-void tftPushColor(uint16_t color)
+__attribute__ ((optimize("O2"))) void tftPushColor(uint16_t color)
 {
   pushColorFast(color);
 }
 
-void tftDrawPixel(int16_t x, int16_t y, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawPixel(int16_t x, int16_t y, uint16_t color)
 {
 #if USE_BOUNDS_CHECK
   if((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) return;
@@ -767,7 +767,7 @@ void tftDrawPixel(int16_t x, int16_t y, uint16_t color)
   RELEASE_TFT();
 }
 
-void tftFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
 {
 #if USE_BOUNDS_CHECK
   // rudimentary clipping (drawChar w/big text requires this)
@@ -801,7 +801,7 @@ void tftDrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
   RELEASE_TFT();
 }
 
-void tftDrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
+__attribute__ ((optimize("O2"))) void tftDrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
 {
 #if USE_BOUNDS_CHECK
   // Rudimentary clipping
@@ -817,19 +817,19 @@ void tftDrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
   RELEASE_TFT();
 }
 
-void tftFillScreen(uint16_t color)
+__attribute__ ((optimize("O2"))) void tftFillScreen(uint16_t color)
 {
   tftFillRect(0, 0,  _width, _height, color);
 }
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
-uint16_t tftColor565(uint8_t r, uint8_t g, uint8_t b)
+__attribute__ ((optimize("O2"))) uint16_t tftColor565(uint8_t r, uint8_t g, uint8_t b)
 {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
 // converts rgb 332 to rgb 565
-uint16_t tftConv8to16(uint8_t x)
+__attribute__ ((optimize("O2"))) uint16_t tftConv8to16(uint8_t x)
 {
   uint16_t r, g, b;
   r = x>>5;

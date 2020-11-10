@@ -10,6 +10,7 @@ extern "C"{
 
 uint8_t fastRandNum(void);
 void seedRndNum(uint16_t seed);
+void resetRndNum(uint16_t usVal);
 
 int32_t mapVal(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);
   

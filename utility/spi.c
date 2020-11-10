@@ -20,7 +20,7 @@
 #define SET_SCK_HI      SET_BIT(SPI_PORTx, SCK_PIN)
 #define SET_SS_HI       SET_BIT(SPI_PORTx, SC_SS_PIN)
 
-void initSPI(void)
+__attribute__ ((optimize("O2"))) void initSPI(void)
 {
   uint8_t backupSREG = SREG;
   cli();
@@ -44,13 +44,13 @@ void initSPI(void)
   SREG = backupSREG;
 }
 
-void sendData8_SPI1(uint8_t data)
+__attribute__ ((optimize("O2"))) void sendData8_SPI1(uint8_t data)
 {
   SPDR = data;
   SPDR_TX_WAIT("nop");
 }
 
-void sendData16_SPI1(uint16_t data)
+__attribute__ ((optimize("O2"))) void sendData16_SPI1(uint16_t data)
 {
   //by this one only r24 and r25 will be used (if -O2);
   SPDR_t in = {.val = data};
@@ -63,7 +63,7 @@ void sendData16_SPI1(uint16_t data)
 }
 
 // call this function instead two calls sendData16_SPI1 can save ~2.1us
-void sendData32_SPI1(uint16_t data0, uint16_t data1)
+__attribute__ ((optimize("O2"))) void sendData32_SPI1(uint16_t data0, uint16_t data1)
 {
   SPDR_t in0 = {.val = data0};
   SPDR_t in1 = {.val = data1};
@@ -81,7 +81,7 @@ void sendData32_SPI1(uint16_t data0, uint16_t data1)
   SPDR_TX_WAIT("nop");
 }
 
-void floodData16_SPI1(uint16_t data, uint16_t len)
+__attribute__ ((optimize("O2"))) void floodData16_SPI1(uint16_t data, uint16_t len)
 {
   SPDR_t in = {.val = data};
   do {
@@ -118,7 +118,7 @@ inline void sendData8Dirt_SPI1(uint8_t bData, uint8_t len)
   );
 }
 
-void sendArrSPI(uint8_t *buf, uint16_t size)
+__attribute__ ((optimize("O2"))) void sendArrSPI(uint8_t *buf, uint16_t size)
 {
   for(uint8_t count = 0; count < size; count++) {
     SPDR = buf[count];
